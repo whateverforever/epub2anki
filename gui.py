@@ -72,12 +72,14 @@ class FileChoosingScreen(ScreenWithState):
         )
 
         anki_label = toga.Label("Which is your existing anki deck?", style=Pack(flex=1))
-        anki_choice = toga.Selection(items=self._state["anki_all_decks"])
+        self.anki_choice = toga.Selection(
+            items=self._state["anki_all_decks"], style=Pack(width=180)
+        )
         anki_box = toga.Box(
-            children=[anki_label, anki_choice], style=Pack(padding_bottom=5)
+            children=[anki_label, self.anki_choice], style=Pack(padding_bottom=5)
         )
 
-        finished_btn = toga.Button("Finished", on_press=self.mark_finished)
+        finished_btn = toga.Button("Finished", on_press=self.finish)
 
         main_box = toga.Box(
             children=[epub_box, anki_box, finished_btn],
@@ -85,6 +87,17 @@ class FileChoosingScreen(ScreenWithState):
         )
 
         self.add(main_box)
+
+    def finish(self, sender):
+        if not self._state["epub_path"]:
+            self._parent_wizard.app.main_window.error_dialog(
+                "No Epub Selected",
+                "You need to chose an epub. So far, nothing has been selected >:{",
+            )
+            return
+
+        self._state["anki_selected_deck"] = self.anki_choice.value
+        self.mark_finished(sender)
 
     def pressed_epub_btn(self, btn):
         app = self._parent_wizard.app
