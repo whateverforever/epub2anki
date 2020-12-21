@@ -7,12 +7,32 @@ from togawizard import WizardBox, WizardScreen
 
 import backend
 
+class Logger:
+    def set_textarea(self, textarea):
+        self._textarea = textarea
+    
+    def debug(self, message):
+        self._textarea.value += f"{message}\n"
+
+LOG = Logger()
 
 class Epub2Anki(toga.App):
     def startup(self):
+        log_textarea = toga.MultilineTextInput(readonly=True, style=Pack(flex=1))
+        self.log_window = toga.Window(title="Under the Hood")
+        self.log_window.content = toga.Box(children=[log_textarea])
+        self.log_window.show()
+        
+        LOG.set_textarea(log_textarea)
+        LOG.debug("Logging window is up and running...")
+
         self.main_window = toga.MainWindow(title=self.formal_name, size=(30, 30))
 
+        LOG.debug("Loading Anki decks...")
         anki_decks = backend.get_all_decks()
+        for deck in anki_decks:
+            LOG.debug("- Found {}".format(deck))
+
         state = {
             "epub_path": None,
             "anki_all_decks": anki_decks,
