@@ -4,17 +4,21 @@ import toga
 from toga.constants import COLUMN
 from toga.style.pack import Pack
 from togawizard import WizardBox, WizardScreen
+from travertino.constants import BOLD, RIGHT, VISIBLE
 
 import backend
+
 
 class Logger:
     def set_textarea(self, textarea):
         self._textarea = textarea
-    
+
     def debug(self, message):
         self._textarea.value += f"{message}\n"
 
+
 LOG = Logger()
+
 
 class Epub2Anki(toga.App):
     def startup(self):
@@ -22,11 +26,9 @@ class Epub2Anki(toga.App):
         self.log_window = toga.Window(title="Under the Hood")
         self.log_window.content = toga.Box(children=[log_textarea])
         self.log_window.show()
-        
+
         LOG.set_textarea(log_textarea)
         LOG.debug("Logging window is up and running...")
-
-        self.main_window = toga.MainWindow(title=self.formal_name, size=(30, 30))
 
         LOG.debug("Loading Anki decks...")
         anki_decks = backend.get_all_decks()
@@ -44,7 +46,7 @@ class Epub2Anki(toga.App):
         wizard = WizardBox([welcome_screen, info_screen])
         wizard.style.update(flex=1)
 
-        # use "enabled" instead of replacing contents?
+        self.main_window = toga.MainWindow(title=self.formal_name, size=(30, 30))
         self.main_window.content = wizard
         self.main_window.content.style.update(padding=10)
         self.main_window.show()
@@ -58,8 +60,26 @@ class ScreenWithState(WizardScreen):
 
 class InfoScreen(ScreenWithState):
     def construct_gui(self):
-        epub_label = toga.Label("You chose {}".format(self._state["epub_path"]))
-        main_box = toga.Box(children=[epub_label])
+        summary_epub = toga.Label(
+            "Epub:", style=Pack(width=50, font_weight=BOLD, text_align=RIGHT)
+        )
+        summary_epub_path = toga.Label(os.path.basename(self._state["epub_path"]))
+        summary_epub_box = toga.Box(children=[summary_epub, summary_epub_path])
+
+        summary_anki = toga.Label(
+            "Anki:", style=Pack(width=50, font_weight=BOLD, text_align=RIGHT)
+        )
+        summary_anki_deck = toga.Label(self._state["anki_selected_deck"])
+        summary_anki_box = toga.Box(
+            children=[summary_anki, summary_anki_deck], style=Pack(padding_bottom=10)
+        )
+
+        self.status_textarea = toga.MultilineTextInput(style=Pack(flex=1))
+
+        main_box = toga.Box(
+            children=[summary_epub_box, summary_anki_box, self.status_textarea],
+            style=Pack(direction=COLUMN, flex=1),
+        )
         self.add(main_box)
 
 
