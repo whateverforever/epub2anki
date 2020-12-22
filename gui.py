@@ -41,8 +41,10 @@ class Epub2Anki(toga.App):
             "anki_all_decks": anki_decks,
             "anki_selected_deck": None,
         }
+
         welcome_screen = FileChoosingScreen(state=state)
         info_screen = InfoScreen(state=state)
+        info_screen.on_gui_ready(self.process_text_sources)
 
         wizard = WizardBox([welcome_screen, info_screen])
         wizard.style.update(flex=1)
@@ -51,7 +53,30 @@ class Epub2Anki(toga.App):
         self.main_window.content = wizard
         self.main_window.content.style.update(padding=10)
         self.main_window.show()
+    
+    def process_text_sources(self, screen):
+        import threading
 
+        def sleepyjoe():
+            LOG.debug("Thread started")
+            time.sleep(1.67)
+            LOG.debug("Thread not yet done")
+        
+            with screen.step("Loading epub contents"):
+                time.sleep(2.34)
+            
+            with screen.step("Loading anki card contents"):
+                time.sleep(1)
+
+            with screen.step("NLP'ing the epub"):
+                time.sleep(1.34)
+
+            with screen.step("NLP'ing the anki cards"):
+                time.sleep(5.67)
+        
+        LOG.debug("Starting thread for work")
+        th = threading.Thread(target=sleepyjoe)
+        th.start()
 
 class ScreenWithState(WizardScreen):
     def __init__(self, state):
