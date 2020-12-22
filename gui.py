@@ -1,3 +1,4 @@
+import time
 import os
 
 import toga
@@ -81,7 +82,25 @@ class InfoScreen(ScreenWithState):
             style=Pack(direction=COLUMN, flex=1),
         )
         self.add(main_box)
+    
+    def step(self, step_name):
+        return self.Step(self, step_name)
+    class Step:
+        def __init__(self, outer_class, step_name):
+            self.t_start = time.time()
+            self.outer_class = outer_class
+            self.step_name = step_name
 
+        def __enter__(self):
+            self.outer_class.status_textarea.value += (f"Starting '{self.step_name}' [...\n")
+
+        def __exit__(self, exc_type, exc_value, exc_traceback):
+            self.outer_class.status_textarea.value += (
+                f"...] Finished '{self.step_name}', took {time.time() - self.t_start:.1f}s\n\n"
+            )
+
+    def update_progress(self, message):
+        self.status_textarea.value += f"{message}\n"
 
 class FileChoosingScreen(ScreenWithState):
     def construct_gui(self):
