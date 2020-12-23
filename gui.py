@@ -1,5 +1,9 @@
-import time
+
+from io import StringIO
+import sys
 import os
+import threading
+import time
 
 import toga
 from toga.constants import COLUMN
@@ -86,18 +90,19 @@ class ScreenWithState(WizardScreen):
 
 class InfoScreen(ScreenWithState):
     def construct_gui(self):
-        summary_epub = toga.Label(
+        epub_label = toga.Label(
             "Epub:", style=Pack(width=50, font_weight=BOLD, text_align=RIGHT)
         )
-        summary_epub_path = toga.Label(os.path.basename(self._state["epub_path"]))
-        summary_epub_box = toga.Box(children=[summary_epub, summary_epub_path])
+        self.summary_epub_path = toga.Label("<epub path placeholder>")
+        summary_epub_box = toga.Box(children=[epub_label, self.summary_epub_path])
 
         summary_anki = toga.Label(
-            "Anki:", style=Pack(width=50, font_weight=BOLD, text_align=RIGHT)
+            "Anki:", style=Pack(width=50, font_weight=BOLD, font_family="monospace", text_align=RIGHT)
         )
-        summary_anki_deck = toga.Label(self._state["anki_selected_deck"])
+        self.summary_anki_deck = toga.Label("<anki deck placeholder>")
         summary_anki_box = toga.Box(
-            children=[summary_anki, summary_anki_deck], style=Pack(padding_bottom=10)
+            children=[summary_anki, self.summary_anki_deck],
+            style=Pack(padding_bottom=10),
         )
 
         self.status_textarea = toga.MultilineTextInput(style=Pack(flex=1))
@@ -106,10 +111,15 @@ class InfoScreen(ScreenWithState):
             children=[summary_epub_box, summary_anki_box, self.status_textarea],
             style=Pack(direction=COLUMN, flex=1),
         )
-        self.add(main_box)
-    
+        return main_box
+
+    def populate(self):
+        self.summary_epub_path.text = os.path.basename(self._state["epub_path"])
+        self.summary_anki_deck.text = self._state["anki_selected_deck"]
+
     def step(self, step_name):
         return self.Step(self, step_name)
+
     class Step:
         def __init__(self, outer_class, step_name):
             self.t_start = time.time()
@@ -135,6 +145,7 @@ class InfoScreen(ScreenWithState):
     def update_progress(self, message):
         self.status_textarea.value += f"{message}\n"
 
+
 class FileChoosingScreen(ScreenWithState):
     def construct_gui(self):
         epub_label = toga.Label("Please choose the epub file", style=Pack(flex=1))
@@ -144,14 +155,12 @@ class FileChoosingScreen(ScreenWithState):
         )
 
         anki_label = toga.Label("Which is your existing anki deck?", style=Pack(flex=1))
-        self.anki_choice = toga.Selection(
-            items=self._state["anki_all_decks"], style=Pack(width=180)
-        )
+        self.anki_choice = toga.Selection(style=Pack(width=180))
         anki_box = toga.Box(
             children=[anki_label, self.anki_choice], style=Pack(padding_bottom=5)
         )
 
-        finished_btn = toga.Button("Finished", on_press=self.finish)
+        finished_btn = toga.Button("Finished", on_press=self.pressed_finish_btn)
 
         main_box = toga.Box(
             children=[epub_box, anki_box, finished_btn],
@@ -160,7 +169,10 @@ class FileChoosingScreen(ScreenWithState):
 
         self.add(main_box)
 
-    def finish(self, sender):
+    def populate(self):
+        self.anki_choice.items = self._state["anki_all_decks"]
+
+    def pressed_finish_btn(self, sender):
         if not self._state["epub_path"]:
             self._parent_wizard.app.main_window.error_dialog(
                 "No Epub Selected",
