@@ -142,22 +142,45 @@ class ScreenWithState(WizardScreen):
 
 class VocabScreen(ScreenWithState):
     def construct_gui(self):
-        label_style = {"width": 80}
+        vocab_label = ui.LabeledText("Vocab:", "<vocab_label placeholder>",)
 
-        vocab = ui.LabeledText(
-            "Vocab:",
-            "<vocab placeholder>",
-            label_style=label_style,
+        self.examples_list = toga.Table(["Example Sentences"])
+        self.examples_list.style.update(flex=1, padding_top=10, padding_bottom=10)
+
+        button_box = toga.Box()
+        button_box.add(
+            toga.Button(
+                "Ignore Word",
+                style=Pack(flex=1, padding_right=10),
+                on_press=self.ignore_btn_clicked,
+            )
         )
-        examples = ui.LabeledText(
-            "Examples:",
-            "",
-            label_style=label_style,
+        button_box.add(
+            toga.Button(
+                "Skip Word",
+                style=Pack(flex=1, padding_right=10),
+                on_press=self.skip_btn_clicked,
+            )
+        )
+        button_box.add(
+            toga.Button("Take Word", style=Pack(flex=2), on_press=self.take_btn_clicked)
         )
 
-        return toga.Box(children=[vocab, examples], style=Pack(direction=COLUMN))
+        return toga.Box(
+            children=[vocab_label, self.examples_list, button_box],
+            style=Pack(direction=COLUMN, flex=1),
+        )
 
     def populate(self):
+        self.examples_list.data = ["asdf", "asd adf ad f f kasjdflkj asdfjlkjf"]
+
+    def ignore_btn_clicked(self, sender):
+        pass
+
+    def skip_btn_clicked(self, sender):
+        pass
+
+    def take_btn_clicked(self, sender):
         pass
 
 
