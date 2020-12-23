@@ -15,9 +15,16 @@ def get_all_decks():
         )
         return None
 
-    return sorted(col.cards.cdeck.unique())
+    res = sorted(col.cards.cdeck.unique())
+    del col
+
+    return res 
 
 def get_deck_string(deck_name):
+    """
+    Returns all cards in one deck concatenated together as a single string.
+    """
+
     col = Collection()
 
     try:
@@ -40,6 +47,7 @@ def get_deck_string(deck_name):
 
     anki_text = " ; ".join(partially_french_fields)
 
+    del col
     return anki_text
 
 if __name__ == "__main__":

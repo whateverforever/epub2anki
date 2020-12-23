@@ -36,18 +36,18 @@ class Epub2Anki(toga.App):
         LOG.debug("Logging window is up and running...")
 
         LOG.debug("Loading Anki decks...")
-        anki_decks = backend.get_all_decks()
+        anki_decks = backend.reader_anki.get_all_decks()
         for deck in anki_decks:
             LOG.debug("- Found {}".format(deck))
 
-        state = {
+        self._state = {
             "epub_path": None,
             "anki_all_decks": anki_decks,
             "anki_selected_deck": None,
         }
 
-        welcome_screen = FileChoosingScreen(state=state)
-        info_screen = InfoScreen(state=state)
+        welcome_screen = FileChoosingScreen(state=self._state)
+        info_screen = InfoScreen(state=self._state)
         info_screen.on_gui_ready(self.process_text_sources)
 
         wizard = WizardBox([welcome_screen, info_screen])
@@ -57,30 +57,34 @@ class Epub2Anki(toga.App):
         self.main_window.content = wizard
         self.main_window.content.style.update(padding=10)
         self.main_window.show()
-    
-    def process_text_sources(self, screen):
-        import threading
 
-        def sleepyjoe():
-            LOG.debug("Thread started")
-            time.sleep(1.67)
-            LOG.debug("Thread not yet done")
-        
+    def process_text_sources(self, screen):
+        def do_slow_stuff():
             with screen.step("Loading epub contents"):
-                time.sleep(2.34)
-            
+                text = backend.reader_epub.read_and_clean_epub(self._state["epub_path"])
+                self._state["epub_contents"] = text
+
             with screen.step("Loading anki card contents"):
-                time.sleep(1)
+                text = backend.reader_anki.get_deck_string(
+                    self._state["anki_selected_deck"]
+                )
+                self._state["anki_deck_contents"] = text
+                print(text[:100])
+
+            with screen.step("Loading NLP model..."):
+                nlp_models = backend.load_nlp_models()
+                nlp_model = nlp_models["french"]
+                self._state["nlp_model"] = nlp_model
 
             with screen.step("NLP'ing the epub"):
                 time.sleep(1.34)
 
             with screen.step("NLP'ing the anki cards"):
                 time.sleep(5.67)
-        
-        LOG.debug("Starting thread for work")
-        th = threading.Thread(target=sleepyjoe)
+
+        th = threading.Thread(target=do_slow_stuff)
         th.start()
+
 
 class ScreenWithState(WizardScreen):
     def __init__(self, state):
