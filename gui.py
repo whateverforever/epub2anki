@@ -44,10 +44,11 @@ class Step:
             sys.stderr = self.stdout_buffer
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-
-        self.custom_print_fun(self.stdout_buffer.getvalue())
+        if self.stdout_buffer:
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            self.custom_print_fun(self.stdout_buffer.getvalue())
+        
         self.custom_print_fun(
             f"...] Finished '{self.step_name}', took {time.time() - self.t_start:.1f}s\n"
         )
