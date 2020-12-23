@@ -11,6 +11,7 @@ from togawizard import WizardBox, WizardScreen
 from travertino.constants import BOLD, RIGHT, VISIBLE
 
 import backend
+import components as ui
 
 
 class Logger:
@@ -48,7 +49,7 @@ class Step:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             self.custom_print_fun(self.stdout_buffer.getvalue())
-        
+
         self.custom_print_fun(
             f"...] Finished '{self.step_name}', took {time.time() - self.t_start:.1f}s\n"
         )
@@ -68,6 +69,7 @@ class Epub2Anki(toga.App):
         LOG.debug("Logging window is up and running...")
 
         state = {
+            "app": self,
             "epub_path": None,
             "anki_all_decks": None,
             "anki_selected_deck": None,
@@ -79,7 +81,7 @@ class Epub2Anki(toga.App):
         info_screen.on_gui_constructed(self.process_text_sources)
         vocab_screen = VocabScreen(state=state)
 
-        wizard = WizardBox([welcome_screen, info_screen])
+        wizard = WizardBox([vocab_screen])
         wizard.style.update(flex=1)
 
         self.main_window = toga.MainWindow(title=self.formal_name, size=(30, 30))
@@ -89,7 +91,7 @@ class Epub2Anki(toga.App):
 
     def load_anki_decks(self, screen):
         LOG.debug("Loading Anki decks...")
-        
+
         anki_decks = backend.reader_anki.get_all_decks()
         screen._state["anki_all_decks"] = anki_decks
 
@@ -123,11 +125,15 @@ class Epub2Anki(toga.App):
                 doc_anki = state["nlp_module"].lemmatize_doc(text_anki)
 
             with screen.step("Extracting lemmatized words and sentences"):
-                texts_epub, lemmas_epub, sents_epub = state["nlp_module"].get_lemmas_and_sentences(doc_epub)
+                texts_epub, lemmas_epub, sents_epub = state[
+                    "nlp_module"
+                ].get_lemmas_and_sentences(doc_epub)
                 print("lemmas", lemmas_epub[0:50])
 
             with screen.step("Extracting lemmatized words and sentences from Anki"):
-                texts_anki, lemmas_anki, sents_anki = state["nlp_module"].get_lemmas_and_sentences(doc_anki)
+                texts_anki, lemmas_anki, sents_anki = state[
+                    "nlp_module"
+                ].get_lemmas_and_sentences(doc_anki)
                 print("lemmas anki", lemmas_anki[0:50])
 
         th = threading.Thread(target=do_slow_stuff)
@@ -135,14 +141,15 @@ class Epub2Anki(toga.App):
 
 
 class ScreenWithState(WizardScreen):
-    def __init__(self, state):
-        super().__init__()
+    def __init__(self, state, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._state = state
 
 
 class VocabScreen(ScreenWithState):
     def construct_gui(self):
-        vocab_label = ui.LabeledText("Vocab:", "<vocab_label placeholder>",)
+        vocab_lt = ui.LabeledText("Vocab:", "<vocab_lt placeholder>",)
+        self.vocab_label = vocab_lt.text_label
 
         self.examples_list = toga.Table(["Example Sentences"])
         self.examples_list.style.update(flex=1, padding_top=10, padding_bottom=10)
@@ -167,11 +174,12 @@ class VocabScreen(ScreenWithState):
         )
 
         return toga.Box(
-            children=[vocab_label, self.examples_list, button_box],
+            children=[vocab_lt, self.examples_list, button_box],
             style=Pack(direction=COLUMN, flex=1),
         )
 
     def populate(self):
+        self.vocab_label.text = "asdfasdfasdfasdf"
         self.examples_list.data = ["asdf", "asd adf ad f f kasjdflkj asdfjlkjf"]
 
     def ignore_btn_clicked(self, sender):
@@ -205,8 +213,15 @@ class InfoScreen(ScreenWithState):
             style=Pack(flex=1, font_family="monospace")
         )
 
+        done_btn = toga.Button("Done", on_press=self.mark_finished)
+
         main_box = toga.Box(
-            children=[summary_epub_box, summary_anki_box, self.status_textarea],
+            children=[
+                summary_epub_box,
+                summary_anki_box,
+                self.status_textarea,
+                done_btn,
+            ],
             style=Pack(direction=COLUMN, flex=1),
         )
         return main_box
