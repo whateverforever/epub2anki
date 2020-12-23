@@ -139,8 +139,27 @@ class ScreenWithState(WizardScreen):
         super().__init__()
         self._state = state
 
+
 class VocabScreen(ScreenWithState):
-    pass
+    def construct_gui(self):
+        label_style = {"width": 80}
+
+        vocab = ui.LabeledText(
+            "Vocab:",
+            "<vocab placeholder>",
+            label_style=label_style,
+        )
+        examples = ui.LabeledText(
+            "Examples:",
+            "",
+            label_style=label_style,
+        )
+
+        return toga.Box(children=[vocab, examples], style=Pack(direction=COLUMN))
+
+    def populate(self):
+        pass
+
 
 class InfoScreen(ScreenWithState):
     def construct_gui(self):
