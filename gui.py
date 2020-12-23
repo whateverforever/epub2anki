@@ -60,27 +60,32 @@ class Epub2Anki(toga.App):
 
     def process_text_sources(self, screen):
         def do_slow_stuff():
+            state = self._state
             with screen.step("Loading epub contents"):
-                text = backend.reader_epub.read_and_clean_epub(self._state["epub_path"])
-                self._state["epub_contents"] = text
+                text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
+                state["epub_contents"] = text_epub
 
             with screen.step("Loading anki card contents"):
-                text = backend.reader_anki.get_deck_string(
-                    self._state["anki_selected_deck"]
+                text_anki = backend.reader_anki.get_deck_string(
+                    state["anki_selected_deck"]
                 )
-                self._state["anki_deck_contents"] = text
-                print(text[:100])
+                state["anki_deck_contents"] = text_anki
+                print(text_anki[:100])
 
             with screen.step("Loading NLP model..."):
-                nlp_models = backend.load_nlp_models()
-                nlp_model = nlp_models["french"]
-                self._state["nlp_model"] = nlp_model
+                nlp_module = backend.load_nlp_models()
+                nlp_model = nlp_module["french"].model
+                state["nlp_model"] = nlp_model
+                state["nlp_module"] = nlp_module["french"]
 
             with screen.step("NLP'ing the epub"):
-                time.sleep(1.34)
+                doc_epub = state["nlp_module"].lemmatize_doc(text_epub)
 
             with screen.step("NLP'ing the anki cards"):
-                time.sleep(5.67)
+                doc_anki = state["nlp_module"].lemmatize_doc(text_anki)
+            
+            print("Epub: ", doc_epub)
+            print("Anki: ", doc_anki)
 
         th = threading.Thread(target=do_slow_stuff)
         th.start()
@@ -101,7 +106,7 @@ class InfoScreen(ScreenWithState):
         summary_epub_box = toga.Box(children=[epub_label, self.summary_epub_path])
 
         summary_anki = toga.Label(
-            "Anki:", style=Pack(width=50, font_weight=BOLD, font_family="monospace", text_align=RIGHT)
+            "Anki:", style=Pack(width=50, font_weight=BOLD, text_align=RIGHT)
         )
         self.summary_anki_deck = toga.Label("<anki deck placeholder>")
         summary_anki_box = toga.Box(
@@ -109,7 +114,7 @@ class InfoScreen(ScreenWithState):
             style=Pack(padding_bottom=10),
         )
 
-        self.status_textarea = toga.MultilineTextInput(style=Pack(flex=1))
+        self.status_textarea = toga.MultilineTextInput(style=Pack(flex=1, font_family="monospace"))
 
         main_box = toga.Box(
             children=[summary_epub_box, summary_anki_box, self.status_textarea],
