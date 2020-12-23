@@ -115,13 +115,21 @@ class InfoScreen(ScreenWithState):
             self.t_start = time.time()
             self.outer_class = outer_class
             self.step_name = step_name
+            self.stdout_buffer = StringIO()
 
         def __enter__(self):
-            self.outer_class.status_textarea.value += (f"Starting '{self.step_name}' [...\n")
+            self.outer_class.update_progress(f"Starting '{self.step_name}' [...")
+            sys.stdout = self.stdout_buffer
+            sys.stderr = self.stdout_buffer
+
 
         def __exit__(self, exc_type, exc_value, exc_traceback):
-            self.outer_class.status_textarea.value += (
-                f"...] Finished '{self.step_name}', took {time.time() - self.t_start:.1f}s\n\n"
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+
+            self.outer_class.update_progress(self.stdout_buffer.getvalue())
+            self.outer_class.update_progress(
+                f"...] Finished '{self.step_name}', took {time.time() - self.t_start:.1f}s\n"
             )
 
     def update_progress(self, message):
