@@ -1,4 +1,3 @@
-
 from io import StringIO
 import sys
 import os
@@ -20,6 +19,38 @@ class Logger:
 
     def debug(self, message):
         self._textarea.value += f"{message}\n"
+
+
+class Step:
+    """
+    Context manager to frame output while executing something. Use custom_print_fun
+    to log to UI elements.
+    """
+
+    def __init__(self, step_name, custom_print_fun=None, capture_stdouterr=True):
+        self.t_start = time.time()
+        self.step_name = step_name
+        self.custom_print_fun = custom_print_fun or print
+
+        self.stdout_buffer = None
+        if capture_stdouterr:
+            self.stdout_buffer = StringIO()
+
+    def __enter__(self):
+        self.custom_print_fun(f"Starting '{self.step_name}' [...")
+
+        if self.stdout_buffer:
+            sys.stdout = self.stdout_buffer
+            sys.stderr = self.stdout_buffer
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        self.custom_print_fun(self.stdout_buffer.getvalue())
+        self.custom_print_fun(
+            f"...] Finished '{self.step_name}', took {time.time() - self.t_start:.1f}s\n"
+        )
 
 
 LOG = Logger()
@@ -127,34 +158,7 @@ class InfoScreen(ScreenWithState):
         self.summary_anki_deck.text = self._state["anki_selected_deck"]
 
     def step(self, step_name):
-        return self.Step(self, step_name)
-
-    class Step:
-        def __init__(self, outer_class, step_name, capture_stdouterr=True):
-            self.t_start = time.time()
-            self.outer_class = outer_class
-            self.step_name = step_name
-
-            self.stdout_buffer = None
-            if capture_stdouterr:
-                self.stdout_buffer = StringIO()
-
-        def __enter__(self):
-            self.outer_class.update_progress(f"Starting '{self.step_name}' [...")
-            
-            if self.stdout_buffer:
-                sys.stdout = self.stdout_buffer
-                sys.stderr = self.stdout_buffer
-
-
-        def __exit__(self, exc_type, exc_value, exc_traceback):
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-
-            self.outer_class.update_progress(self.stdout_buffer.getvalue())
-            self.outer_class.update_progress(
-                f"...] Finished '{self.step_name}', took {time.time() - self.t_start:.1f}s\n"
-            )
+        return Step(step_name, self.update_progress)
 
     def update_progress(self, message):
         self.status_textarea.value += f"{message}\n"
