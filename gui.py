@@ -121,16 +121,21 @@ class InfoScreen(ScreenWithState):
         return self.Step(self, step_name)
 
     class Step:
-        def __init__(self, outer_class, step_name):
+        def __init__(self, outer_class, step_name, capture_stdouterr=True):
             self.t_start = time.time()
             self.outer_class = outer_class
             self.step_name = step_name
-            self.stdout_buffer = StringIO()
+
+            self.stdout_buffer = None
+            if capture_stdouterr:
+                self.stdout_buffer = StringIO()
 
         def __enter__(self):
             self.outer_class.update_progress(f"Starting '{self.step_name}' [...")
-            sys.stdout = self.stdout_buffer
-            sys.stderr = self.stdout_buffer
+            
+            if self.stdout_buffer:
+                sys.stdout = self.stdout_buffer
+                sys.stderr = self.stdout_buffer
 
 
         def __exit__(self, exc_type, exc_value, exc_traceback):
