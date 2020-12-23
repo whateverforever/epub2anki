@@ -67,20 +67,17 @@ class Epub2Anki(toga.App):
         LOG.set_textarea(log_textarea)
         LOG.debug("Logging window is up and running...")
 
-        LOG.debug("Loading Anki decks...")
-        anki_decks = backend.reader_anki.get_all_decks()
-        for deck in anki_decks:
-            LOG.debug("- Found {}".format(deck))
-
-        self._state = {
+        state = {
             "epub_path": None,
-            "anki_all_decks": anki_decks,
+            "anki_all_decks": None,
             "anki_selected_deck": None,
         }
 
-        welcome_screen = FileChoosingScreen(state=self._state)
-        info_screen = InfoScreen(state=self._state)
-        info_screen.on_gui_ready(self.process_text_sources)
+        welcome_screen = FileChoosingScreen(state=state)
+        welcome_screen.on_gui_constructed(self.load_anki_decks)
+        info_screen = InfoScreen(state=state)
+        info_screen.on_gui_constructed(self.process_text_sources)
+        vocab_screen = VocabScreen(state=state)
 
         wizard = WizardBox([welcome_screen, info_screen])
         wizard.style.update(flex=1)
@@ -90,9 +87,18 @@ class Epub2Anki(toga.App):
         self.main_window.content.style.update(padding=10)
         self.main_window.show()
 
+    def load_anki_decks(self, screen):
+        LOG.debug("Loading Anki decks...")
+        
+        anki_decks = backend.reader_anki.get_all_decks()
+        screen._state["anki_all_decks"] = anki_decks
+
+        for deck in anki_decks:
+            LOG.debug("- Found {}".format(deck))
+
     def process_text_sources(self, screen):
         def do_slow_stuff():
-            state = self._state
+            state = screen._state
             with screen.step("Loading epub contents"):
                 text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
                 state["epub_contents"] = text_epub
@@ -133,6 +139,8 @@ class ScreenWithState(WizardScreen):
         super().__init__()
         self._state = state
 
+class VocabScreen(ScreenWithState):
+    pass
 
 class InfoScreen(ScreenWithState):
     def construct_gui(self):
