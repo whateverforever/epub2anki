@@ -114,9 +114,14 @@ class Epub2Anki(toga.App):
 
             with screen.step("NLP'ing the anki cards"):
                 doc_anki = state["nlp_module"].lemmatize_doc(text_anki)
-            
-            print("Epub: ", doc_epub)
-            print("Anki: ", doc_anki)
+
+            with screen.step("Extracting lemmatized words and sentences"):
+                texts_epub, lemmas_epub, sents_epub = state["nlp_module"].get_lemmas_and_sentences(doc_epub)
+                print("lemmas", lemmas_epub[0:50])
+
+            with screen.step("Extracting lemmatized words and sentences from Anki"):
+                texts_anki, lemmas_anki, sents_anki = state["nlp_module"].get_lemmas_and_sentences(doc_anki)
+                print("lemmas anki", lemmas_anki[0:50])
 
         th = threading.Thread(target=do_slow_stuff)
         th.start()
@@ -145,7 +150,9 @@ class InfoScreen(ScreenWithState):
             style=Pack(padding_bottom=10),
         )
 
-        self.status_textarea = toga.MultilineTextInput(style=Pack(flex=1, font_family="monospace"))
+        self.status_textarea = toga.MultilineTextInput(
+            style=Pack(flex=1, font_family="monospace")
+        )
 
         main_box = toga.Box(
             children=[summary_epub_box, summary_anki_box, self.status_textarea],
