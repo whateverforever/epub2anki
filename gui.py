@@ -194,20 +194,13 @@ class VocabScreen(ScreenWithState):
 
 class InfoScreen(ScreenWithState):
     def construct_gui(self):
-        epub_label = toga.Label(
-            "Epub:", style=Pack(width=50, font_weight=BOLD, text_align=RIGHT)
-        )
-        self.summary_epub_path = toga.Label("<epub path placeholder>")
-        summary_epub_box = toga.Box(children=[epub_label, self.summary_epub_path])
+        lt_style = {"width": 50}
 
-        summary_anki = toga.Label(
-            "Anki:", style=Pack(width=50, font_weight=BOLD, text_align=RIGHT)
-        )
-        self.summary_anki_deck = toga.Label("<anki deck placeholder>")
-        summary_anki_box = toga.Box(
-            children=[summary_anki, self.summary_anki_deck],
-            style=Pack(padding_bottom=10),
-        )
+        epub_lt = ui.LabeledText("Epub:", "<placeholder>", label_style=lt_style)
+        self.summary_epub_path = epub_lt.text_label
+
+        anki_lt = ui.LabeledText("Anki:", "<placeholder>", label_style=lt_style)
+        self.summary_anki_deck = anki_lt.text_label
 
         self.status_textarea = toga.MultilineTextInput(
             style=Pack(flex=1, font_family="monospace")
@@ -216,12 +209,7 @@ class InfoScreen(ScreenWithState):
         done_btn = toga.Button("Done", on_press=self.mark_finished)
 
         main_box = toga.Box(
-            children=[
-                summary_epub_box,
-                summary_anki_box,
-                self.status_textarea,
-                done_btn,
-            ],
+            children=[epub_lt, anki_lt, self.status_textarea, done_btn,],
             style=Pack(direction=COLUMN, flex=1),
         )
         return main_box
