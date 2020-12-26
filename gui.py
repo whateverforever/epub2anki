@@ -1,8 +1,9 @@
-from io import StringIO
-import sys
 import os
+import re
+import sys
 import threading
 import time
+from io import StringIO
 
 import toga
 from toga.constants import COLUMN
@@ -166,13 +167,24 @@ class SentenceScreen(ScreenWithState):
         vocab_lt = ui.LabeledText("Vocab:", "<vocab_lt placeholder>",)
         self.vocab_label = vocab_lt.text_label
 
-        self.examples_list = toga.Table(["No.", "Sentences"])
+        self.examples_list = toga.Table(["Sentences"])
         self.examples_list.style.update(
             flex=1, padding_top=PADDING_UNIVERSAL, padding_bottom=PADDING_UNIVERSAL
         )
 
+        commands = [
+            toga.Command(
+                self.replace_sent_cmd,
+                label=f"Replace Sentence {idx+1}",
+                shortcut=toga.Key.MOD_1 + f"{idx+1}",
+                order=idx,
+            )
+            for idx in range(NUM_SENTENCES)
+        ]
+        self._state["app"].commands.add(*commands)
+
         numbered_replace_btns = [
-            toga.Button(f"{idx+1}", on_press=self.replace_btn_pressed)
+            toga.Button(f"{idx+1}", on_press=self.replace_sent_btn)
             for idx in range(NUM_SENTENCES)
         ]
         button_box = toga.Box()
@@ -181,33 +193,33 @@ class SentenceScreen(ScreenWithState):
             *numbered_replace_btns,
         )
 
-        md1 = toga.Command(
-            lambda x: print("HWHWHWHWHW", x, x.shortcut),
-            label="Example command",
-            tooltip="Tells you when it has been activated",
-            shortcut=toga.Key.MOD_1 + "1",
-        )
-        self._state["app"].commands.add(md1)
-
-        self.definition_field = toga.MultilineTextInput()
-        self.definition_field.style.update(flex=2, padding_bottom=PADDING_UNIVERSAL)
+        self.definition_field = toga.MultilineTextInput(placeholder="Please paste your definition here")
+        self.definition_field.style.update(flex=2, padding_top=PADDING_UNIVERSAL)
 
         return toga.Box(
-            children=[vocab_lt, self.examples_list, self.definition_field, button_box],
+            children=[vocab_lt, self.examples_list, button_box, self.definition_field],
             style=Pack(direction=COLUMN, flex=1),
         )
 
     def update_gui_contents(self):
-        self.examples_list.data = [
-            ["1", "asdfasdfasdf askdfasd aösdlkfj asdöfkljasd fökalsdjf "],
-            ["2", "oipuiupiupiu"],
-        ]
+        vocab_idx = self._state["vocab_current"]
+        self.examples_list.data = self._state["vocab_sentences"][vocab_idx]
+        self.vocab_label.text = self._state["vocab_words"][vocab_idx]
 
-    def replace_btn_pressed(self, sender: toga.Button):
+    def replace_sent_cmd(self, sender: toga.Command):
+        sentence_number = re.sub(r"<.+?>", "", sender.shortcut)
+        sentence_idx = int(sentence_number) - 1
+
+        self.replace_sentence(sentence_idx)
+
+    def replace_sent_btn(self, sender: toga.Button):
         sentence_number = int(sender.label)
         sentence_idx = sentence_number - 1
 
-        self.examples_list.data[sentence_idx] = ["999", "AHHAHAHAHAHAHAH"]
+        self.replace_sentence(sentence_idx)
+
+    def replace_sentence(self, sentence_idx):
+        pass
 
 
 class VocabScreen(ScreenWithState):
