@@ -8,7 +8,6 @@ import toga
 from toga.constants import COLUMN
 from toga.style.pack import Pack
 from togawizard import WizardBox, WizardScreen
-from travertino.constants import BOLD, RIGHT, VISIBLE
 
 import backend
 import components as ui
@@ -56,6 +55,7 @@ class Step:
 
 
 LOG = Logger()
+NUM_SENTENCES = 5  # Number of sentences we want on our cards
 
 
 class Epub2Anki(toga.App):
@@ -73,15 +73,29 @@ class Epub2Anki(toga.App):
             "epub_path": None,
             "anki_all_decks": None,
             "anki_selected_deck": None,
+            "vocab_current": 0,
+            "vocab_words": ["parler", "marcher", "chier", "mordiller"],  # TEMPORARY
+            "vocab_sentences": [
+                ["Je veux te parler", "Parle à ma main"],
+                ["Faisons march-arrière!"],
+                ["ça me fait chier"],
+                ["tu me mordilles l'oreille"],
+            ],
+            "vocab_ignored": ["parler"],
+            "vocab_taken": [1],  # indices of words worth considering
         }
 
         welcome_screen = FileChoosingScreen(state=state)
         welcome_screen.on_gui_constructed(self.load_anki_decks)
+
         info_screen = InfoScreen(state=state)
         info_screen.on_gui_constructed(self.process_text_sources)
+
         vocab_screen = VocabScreen(state=state)
 
-        wizard = WizardBox([vocab_screen])
+        sentence_screen = SentenceScreen(state=state)
+
+        wizard = WizardBox([sentence_screen, welcome_screen, info_screen, vocab_screen])
         wizard.style.update(flex=1)
 
         self.main_window = toga.MainWindow(title=self.formal_name, size=(30, 30))
@@ -146,6 +160,39 @@ class ScreenWithState(WizardScreen):
         self._state = state
 
 
+class SentenceScreen(ScreenWithState):
+    def construct_gui(self):
+        vocab_lt = ui.LabeledText("Vocab:", "<vocab_lt placeholder>",)
+        self.vocab_label = vocab_lt.text_label
+
+        self.examples_list = toga.Table(["No.", "Sentences"])
+        self.examples_list.style.update(flex=1, padding_top=10, padding_bottom=10)
+
+        numbered_replace_btns = [
+            toga.Button(f"{idx+1}", on_press=self.replace_btn_pressed)
+            for idx in range(NUM_SENTENCES)
+        ]
+        button_box = toga.Box()
+        button_box.add(toga.Label("Replace Sentence", style=Pack(padding_right=10)), *numbered_replace_btns)
+
+        return toga.Box(
+            children=[vocab_lt, self.examples_list, button_box],
+            style=Pack(direction=COLUMN, flex=1),
+        )
+
+    def update_gui_contents(self):
+        self.examples_list.data = [
+            ["1", "asdfasdfasdf askdfasd aösdlkfj asdöfkljasd fökalsdjf "],
+            ["2", "oipuiupiupiu"],
+        ]
+
+    def replace_btn_pressed(self, sender: toga.Button):
+        sentence_number = int(sender.label)
+        sentence_idx = sentence_number - 1
+
+        self.examples_list.data[sentence_idx] = ["999", "AHHAHAHAHAHAHAH"]
+
+
 class VocabScreen(ScreenWithState):
     def construct_gui(self):
         vocab_lt = ui.LabeledText("Vocab:", "<vocab_lt placeholder>",)
@@ -178,18 +225,46 @@ class VocabScreen(ScreenWithState):
             style=Pack(direction=COLUMN, flex=1),
         )
 
-    def populate(self):
-        self.vocab_label.text = "asdfasdfasdfasdf"
-        self.examples_list.data = ["asdf", "asd adf ad f f kasjdflkj asdfjlkjf"]
+    def update_gui_contents(self):
+        state = self._state
+
+        vocab_idx = state["vocab_current"]
+
+        try:
+            new_word = state["vocab_words"][vocab_idx]
+            sentences = state["vocab_sentences"][vocab_idx]
+        except IndexError:
+            new_word = "[No more words]"
+            sentences = []
+
+        self.vocab_label.text = new_word
+        self.examples_list.data = sentences
+
+        self.ensure_refresh()
 
     def ignore_btn_clicked(self, sender):
-        pass
+        # add word to ignore list
+        vocab_idx = self._state["vocab_current"]
+        word = self._state["vocab_words"][vocab_idx]
+        self._state["vocab_ignored"].append(word)
+
+        self._state["vocab_current"] += 1
+        self.update_gui_contents()
 
     def skip_btn_clicked(self, sender):
-        pass
+        self._state["vocab_current"] += 1
+        self.update_gui_contents()
 
     def take_btn_clicked(self, sender):
-        pass
+        # save somewhere
+        self._state["vocab_taken"].append(self._state["vocab_current"])
+        self._state["vocab_current"] += 1
+
+        self.update_gui_contents()
+
+        import pprint
+
+        LOG.debug(pprint.pformat(self._state))
 
 
 class InfoScreen(ScreenWithState):
@@ -214,7 +289,7 @@ class InfoScreen(ScreenWithState):
         )
         return main_box
 
-    def populate(self):
+    def update_gui_contents(self):
         self.summary_epub_path.text = os.path.basename(self._state["epub_path"])
         self.summary_anki_deck.text = self._state["anki_selected_deck"]
 
@@ -248,7 +323,7 @@ class FileChoosingScreen(ScreenWithState):
 
         self.add(main_box)
 
-    def populate(self):
+    def update_gui_contents(self):
         self.anki_choice.items = self._state["anki_all_decks"]
 
     def pressed_finish_btn(self, sender):
