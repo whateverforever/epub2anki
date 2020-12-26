@@ -56,6 +56,7 @@ class Step:
 
 LOG = Logger()
 NUM_SENTENCES = 5  # Number of sentences we want on our cards
+PADDING_UNIVERSAL = 10
 
 
 class Epub2Anki(toga.App):
@@ -98,9 +99,9 @@ class Epub2Anki(toga.App):
         wizard = WizardBox([sentence_screen, welcome_screen, info_screen, vocab_screen])
         wizard.style.update(flex=1)
 
-        self.main_window = toga.MainWindow(title=self.formal_name, size=(30, 30))
+        self.main_window = toga.MainWindow(title=self.formal_name, size=(800, 600))
         self.main_window.content = wizard
-        self.main_window.content.style.update(padding=10)
+        self.main_window.content.style.update(padding=PADDING_UNIVERSAL)
         self.main_window.show()
 
     def load_anki_decks(self, screen):
@@ -166,17 +167,33 @@ class SentenceScreen(ScreenWithState):
         self.vocab_label = vocab_lt.text_label
 
         self.examples_list = toga.Table(["No.", "Sentences"])
-        self.examples_list.style.update(flex=1, padding_top=10, padding_bottom=10)
+        self.examples_list.style.update(
+            flex=1, padding_top=PADDING_UNIVERSAL, padding_bottom=PADDING_UNIVERSAL
+        )
 
         numbered_replace_btns = [
             toga.Button(f"{idx+1}", on_press=self.replace_btn_pressed)
             for idx in range(NUM_SENTENCES)
         ]
         button_box = toga.Box()
-        button_box.add(toga.Label("Replace Sentence", style=Pack(padding_right=10)), *numbered_replace_btns)
+        button_box.add(
+            toga.Label("Replace Sentence", style=Pack(padding_right=PADDING_UNIVERSAL)),
+            *numbered_replace_btns,
+        )
+
+        md1 = toga.Command(
+            lambda x: print("HWHWHWHWHW", x, x.shortcut),
+            label="Example command",
+            tooltip="Tells you when it has been activated",
+            shortcut=toga.Key.MOD_1 + "1",
+        )
+        self._state["app"].commands.add(md1)
+
+        self.definition_field = toga.MultilineTextInput()
+        self.definition_field.style.update(flex=2, padding_bottom=PADDING_UNIVERSAL)
 
         return toga.Box(
-            children=[vocab_lt, self.examples_list, button_box],
+            children=[vocab_lt, self.examples_list, self.definition_field, button_box],
             style=Pack(direction=COLUMN, flex=1),
         )
 
@@ -199,20 +216,22 @@ class VocabScreen(ScreenWithState):
         self.vocab_label = vocab_lt.text_label
 
         self.examples_list = toga.Table(["Example Sentences"])
-        self.examples_list.style.update(flex=1, padding_top=10, padding_bottom=10)
+        self.examples_list.style.update(
+            flex=1, padding_top=PADDING_UNIVERSAL, padding_bottom=PADDING_UNIVERSAL
+        )
 
         button_box = toga.Box()
         button_box.add(
             toga.Button(
                 "Ignore Word",
-                style=Pack(flex=1, padding_right=10),
+                style=Pack(flex=1, padding_right=PADDING_UNIVERSAL),
                 on_press=self.ignore_btn_clicked,
             )
         )
         button_box.add(
             toga.Button(
                 "Skip Word",
-                style=Pack(flex=1, padding_right=10),
+                style=Pack(flex=1, padding_right=PADDING_UNIVERSAL),
                 on_press=self.skip_btn_clicked,
             )
         )
