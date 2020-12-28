@@ -10,9 +10,6 @@ from io import StringIO
 
 sys.path.append("/Users/max/Coding/python/ellana-vocab")
 
-import nimporter
-from counter import countWithIndex, removeDuplicates
-
 import numpy as np
 import toga
 
@@ -104,7 +101,7 @@ class Epub2Anki(toga.App):
         welcome_screen.on_gui_constructed(self.load_anki_decks)
 
         info_screen = InfoScreen(state=state)
-        info_screen.on_gui_constructed(self.process_text_sources)
+        info_screen.on_gui_constructed(self.start_bg_text_processing)
 
         vocab_screen = VocabScreen(state=state)
 
@@ -127,74 +124,51 @@ class Epub2Anki(toga.App):
         for deck in anki_decks:
             LOG.debug("- Found {}".format(deck))
 
-    def process_text_sources(self, screen):
+    def start_bg_text_processing(self, screen):
         async def do_slow_stuff(asdf):
-            state = screen._state
             loop = asyncio.get_event_loop()
-            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
-            def step_load_nlp():
-                with screen.step("Loading epub contents"):
-                    text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
-                    state["epub_contents"] = text_epub
+            def step_load_nlp(state):
+                text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
+                text_anki = backend.reader_anki.get_deck_string(
+                    state["anki_selected_deck"]
+                )
+                nlp_module = backend.load_nlp_models()
+                nlp_model = nlp_module["french"].model
 
-                with screen.step("Loading anki card contents"):
-                    text_anki = backend.reader_anki.get_deck_string(
-                        state["anki_selected_deck"]
-                    )
-                    state["anki_deck_contents"] = text_anki
-                    print(text_anki[:100])
+                state["epub_contents"] = text_epub
+                state["anki_deck_contents"] = text_anki
+                state["nlp_model"] = nlp_model
+                state["nlp_module"] = nlp_module["french"]
 
-                with screen.step("Loading NLP model..."):
-                    nlp_module = backend.load_nlp_models()
-                    nlp_model = nlp_module["french"].model
-                    state["nlp_model"] = nlp_model
-                    state["nlp_module"] = nlp_module["french"]
+            def step_nlp_epub(state):
+                doc_epub = state["nlp_module"].lemmatize_doc(state["epub_contents"])
+                state["doc_epub"] = doc_epub
 
-            print("Awaiting NLP model loading...")
-            #await asyncio.wait([loop.run_in_executor(executor, step_load_nlp)])
-            await loop.run_in_executor(executor, step_load_nlp)
-            print("NLP model loaded...")
-            
-            screen.update_progress("Loaded NLP Model etc")
-            screen.ensure_refresh()
+            def step_nlp_anki(state):
+                doc_anki = state["nlp_module"].lemmatize_doc(
+                    state["anki_deck_contents"]
+                )
+                state["doc_anki"] = doc_anki
 
-            def step_nlp_epub():
-                state = screen._state
-                with screen.step("NLP'ing the epub"):
-                    doc_epub = state["nlp_module"].lemmatize_doc(state["epub_contents"])
-                    state["doc_epub"] = doc_epub
-            
-            print("Awaiting NLPing the EPUB")
-            await loop.run_in_executor(executor, step_nlp_epub)
-            print("NLPed the EPUB")
-            
-            screen.update_progress("NLP'ed the EPUB")
-            screen.ensure_refresh()
+            def step_counting(state):
+                nlp = state["nlp_module"]
+                texts_epub, lemmas_epub, sents_epub = nlp.get_lemmas_and_sentences(
+                    state["doc_epub"]
+                )
+                texts_anki, lemmas_anki, sents_anki = nlp.get_lemmas_and_sentences(
+                    state["doc_anki"]
+                )
 
-        async def do_slow_stuff3(asdf):
-            state = screen._state
-            with screen.step("NLP'ing the anki cards"):
-                doc_anki = state["nlp_module"].lemmatize_doc(state["anki_deck_contents"])
+                import nimporter
+                from counter import countWithIndex, removeDuplicates
 
-            with screen.step("Extracting lemmatized words and sentences"):
-                texts_epub, lemmas_epub, sents_epub = state[
-                    "nlp_module"
-                ].get_lemmas_and_sentences(state["doc_epub"])
-                print("lemmas", lemmas_epub[0:50])
-
-            with screen.step("Extracting lemmatized words and sentences from Anki"):
-                texts_anki, lemmas_anki, sents_anki = state[
-                    "nlp_module"
-                ].get_lemmas_and_sentences(doc_anki)
-                print("lemmas anki", lemmas_anki[0:50])
-
-            with screen.step("Count lemmas"):
                 lemmas_with_counts = [
                     (lem, count, idxs)
                     for lem, count, idxs in countWithIndex(lemmas_epub)
                     if lem not in lemmas_anki
                 ]
+
                 counts = [count for lem, count, idxs in lemmas_with_counts]
 
                 lemmas_with_counts = [
@@ -204,10 +178,9 @@ class Epub2Anki(toga.App):
                     and count <= np.quantile(counts, 0.99)
                 ]
 
-            with screen.step("Remove multilines"):
                 sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
 
-            with screen.step("Inspection"):
+                out = {"vocab_words":[],"vocab_sentences":[]}
                 for counted_lemma in lemmas_with_counts:
                     lem, count, idxs = counted_lemma
                     counts.append(count)
@@ -237,17 +210,36 @@ class Epub2Anki(toga.App):
                         )
                         for isent, sent in enumerate(lem_sentences)
                     ]
-                    state["vocab_words"].append(lem)
-                    state["vocab_sentences"].append(highlighted_sentences)
-            
-            screen.update_progress("Finished")
-            screen.ensure_refresh()
+                    out["vocab_words"].append(lem)
+                    out["vocab_sentences"].append(highlighted_sentences)
+                return out
+
+            steps = [
+                (step_load_nlp, "Loading the NLP Model etc."),
+                (step_nlp_epub, "NLP'ing the epub"),
+                (step_nlp_anki, "NLP'ing the anki deck"),
+                (step_counting, "Counting, filtering and highlighting"),
+            ]
+
+            for i, (step_fun, step_end_description) in enumerate(steps):
+                t_start = time.time()
+                screen.update_progress(
+                    "Step {:02d}: Starting '{}'".format(i, step_end_description)
+                )
+
+                out = await loop.run_in_executor(None, step_fun, screen._state)
+                duration = time.time() - t_start
+
+                if out:
+                    screen._state.update(out)
+
+                screen.update_progress(
+                    "Step {:02d}: Finished '{}'. Took {:.2f}s\n".format(
+                        i, step_end_description, duration
+                    )
+                )
 
         self.add_background_task(do_slow_stuff)
-        # self.add_background_task(do_slow_stuff2)
-        # self.add_background_task(do_slow_stuff3)
-        #th = threading.Thread(target=do_slow_stuff)
-        #th.start()
 
 
 class ScreenWithState(WizardScreen):
