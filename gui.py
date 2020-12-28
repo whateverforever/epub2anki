@@ -1,3 +1,4 @@
+import random
 import os
 import re
 import sys
@@ -5,11 +6,17 @@ import threading
 import time
 from io import StringIO
 
+sys.path.append("/Users/max/Coding/python/ellana-vocab")
+
+
+import numpy as np
 import toga
+
 from toga.constants import COLUMN
 from toga.style.pack import Pack
 from togawizard import WizardBox, WizardScreen
 
+from html_cleaner import highlight_word
 import backend
 import components as ui
 
@@ -57,7 +64,10 @@ class Step:
 
 LOG = Logger()
 NUM_SENTENCES = 5  # Number of sentences we want on our cards
+MAX_SENTENCES = 10
 PADDING_UNIVERSAL = 10
+RE_MULTI_NEWLINES = re.compile(r"\n+")
+LOGFILE = open("loggy.log", "w+")
 
 
 class Epub2Anki(toga.App):
@@ -97,7 +107,7 @@ class Epub2Anki(toga.App):
 
         sentence_screen = SentenceScreen(state=state)
 
-        wizard = WizardBox([sentence_screen, welcome_screen, info_screen, vocab_screen])
+        wizard = WizardBox([welcome_screen, info_screen, vocab_screen])
         wizard.style.update(flex=1)
 
         self.main_window = toga.MainWindow(title=self.formal_name, size=(800, 600))
@@ -116,6 +126,9 @@ class Epub2Anki(toga.App):
 
     def process_text_sources(self, screen):
         def do_slow_stuff():
+            import nimporter
+            from counter import countWithIndex, removeDuplicates
+
             state = screen._state
             with screen.step("Loading epub contents"):
                 text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
@@ -151,6 +164,57 @@ class Epub2Anki(toga.App):
                     "nlp_module"
                 ].get_lemmas_and_sentences(doc_anki)
                 print("lemmas anki", lemmas_anki[0:50])
+
+            with screen.step("Count lemmas"):
+                lemmas_with_counts = [
+                    (lem, count, idxs)
+                    for lem, count, idxs in countWithIndex(lemmas_epub)
+                    if lem not in lemmas_anki
+                ]
+                counts = [count for lem, count, idxs in lemmas_with_counts]
+
+                lemmas_with_counts = [
+                    (lem, count, idxs)
+                    for lem, count, idxs in countWithIndex(lemmas_epub)
+                    if count >= np.quantile(counts, 0.95)
+                    and count <= np.quantile(counts, 0.99)
+                ]
+
+            with screen.step("Remove multilines"):
+                sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
+
+            with screen.step("Inspection"):
+                for counted_lemma in lemmas_with_counts:
+                    lem, count, idxs = counted_lemma
+                    counts.append(count)
+
+                    if lem in lemmas_anki:
+                        continue
+
+                    random.seed(1234)
+                    try:
+                        lem_sentences = random.sample(
+                            ([sents_epub[i] for i in idxs]), MAX_SENTENCES
+                        )
+                    except ValueError:
+                        pass
+
+                    random.seed(1234)
+                    try:
+                        lem_verbatum_texts = random.sample(
+                            ([texts_epub[i] for i in idxs]), MAX_SENTENCES
+                        )
+                    except ValueError:
+                        pass
+
+                    highlighted_sentences = [
+                        highlight_word(
+                            lem_verbatum_texts[isent], sent, highlight="**WORD**"
+                        )
+                        for isent, sent in enumerate(lem_sentences)
+                    ]
+                    state["vocab_words"].append(lem)
+                    state["vocab_sentences"].append(highlighted_sentences)
 
         th = threading.Thread(target=do_slow_stuff)
         th.start()
@@ -193,7 +257,9 @@ class SentenceScreen(ScreenWithState):
             *numbered_replace_btns,
         )
 
-        self.definition_field = toga.MultilineTextInput(placeholder="Please paste your definition here")
+        self.definition_field = toga.MultilineTextInput(
+            placeholder="Please paste your definition here"
+        )
         self.definition_field.style.update(flex=2, padding_top=PADDING_UNIVERSAL)
 
         return toga.Box(
@@ -219,7 +285,7 @@ class SentenceScreen(ScreenWithState):
         self.replace_sentence(sentence_idx)
 
     def replace_sentence(self, sentence_idx):
-        pass
+        print(f"Someone wants to replace sentence {sentence_idx}")
 
 
 class VocabScreen(ScreenWithState):
@@ -328,7 +394,11 @@ class InfoScreen(ScreenWithState):
         return Step(step_name)
 
     def update_progress(self, message):
-        self.status_textarea.value += f"{message}\n"
+        global LOGFILE
+        msg = f"{message}\n"
+
+        LOGFILE.write(msg)
+        self.status_textarea.value += msg
 
 
 class FileChoosingScreen(ScreenWithState):
