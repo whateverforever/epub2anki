@@ -325,7 +325,7 @@ class InfoScreen(ScreenWithState):
         self.summary_anki_deck.text = self._state["anki_selected_deck"]
 
     def step(self, step_name):
-        return Step(step_name, self.update_progress)
+        return Step(step_name)
 
     def update_progress(self, message):
         self.status_textarea.value += f"{message}\n"
