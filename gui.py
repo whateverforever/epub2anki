@@ -67,7 +67,6 @@ NUM_SENTENCES = 5  # Number of sentences we want on our cards
 MAX_SENTENCES = 10
 PADDING_UNIVERSAL = 10
 RE_MULTI_NEWLINES = re.compile(r"\n+")
-LOGFILE = open("loggy.log", "w+")
 
 
 class Epub2Anki(toga.App):
@@ -394,11 +393,7 @@ class InfoScreen(ScreenWithState):
         return Step(step_name)
 
     def update_progress(self, message):
-        global LOGFILE
-        msg = f"{message}\n"
-
-        LOGFILE.write(msg)
-        self.status_textarea.value += msg
+        self.status_textarea.value += f"{message}\n"
 
 
 class FileChoosingScreen(ScreenWithState):
