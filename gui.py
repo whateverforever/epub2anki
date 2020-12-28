@@ -1,3 +1,5 @@
+import concurrent.futures
+import asyncio
 import random
 import os
 import re
@@ -128,31 +130,44 @@ class Epub2Anki(toga.App):
     def process_text_sources(self, screen):
         async def do_slow_stuff(asdf):
             state = screen._state
-            with screen.step("Loading epub contents"):
-                text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
-                state["epub_contents"] = text_epub
+            loop = asyncio.get_event_loop()
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
-            with screen.step("Loading anki card contents"):
-                text_anki = backend.reader_anki.get_deck_string(
-                    state["anki_selected_deck"]
-                )
-                state["anki_deck_contents"] = text_anki
-                print(text_anki[:100])
+            def step_load_nlp():
+                with screen.step("Loading epub contents"):
+                    text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
+                    state["epub_contents"] = text_epub
 
-            with screen.step("Loading NLP model..."):
-                nlp_module = backend.load_nlp_models()
-                nlp_model = nlp_module["french"].model
-                state["nlp_model"] = nlp_model
-                state["nlp_module"] = nlp_module["french"]
+                with screen.step("Loading anki card contents"):
+                    text_anki = backend.reader_anki.get_deck_string(
+                        state["anki_selected_deck"]
+                    )
+                    state["anki_deck_contents"] = text_anki
+                    print(text_anki[:100])
+
+                with screen.step("Loading NLP model..."):
+                    nlp_module = backend.load_nlp_models()
+                    nlp_model = nlp_module["french"].model
+                    state["nlp_model"] = nlp_model
+                    state["nlp_module"] = nlp_module["french"]
+
+            print("Awaiting NLP model loading...")
+            #await asyncio.wait([loop.run_in_executor(executor, step_load_nlp)])
+            await loop.run_in_executor(executor, step_load_nlp)
+            print("NLP model loaded...")
             
             screen.update_progress("Loaded NLP Model etc")
             screen.ensure_refresh()
 
-        async def do_slow_stuff2(asdf):
-            state = screen._state
-            with screen.step("NLP'ing the epub"):
-                doc_epub = state["nlp_module"].lemmatize_doc(state["epub_contents"])
-                state["doc_epub"] = doc_epub
+            def step_nlp_epub():
+                state = screen._state
+                with screen.step("NLP'ing the epub"):
+                    doc_epub = state["nlp_module"].lemmatize_doc(state["epub_contents"])
+                    state["doc_epub"] = doc_epub
+            
+            print("Awaiting NLPing the EPUB")
+            await loop.run_in_executor(executor, step_nlp_epub)
+            print("NLPed the EPUB")
             
             screen.update_progress("NLP'ed the EPUB")
             screen.ensure_refresh()
@@ -229,8 +244,8 @@ class Epub2Anki(toga.App):
             screen.ensure_refresh()
 
         self.add_background_task(do_slow_stuff)
-        self.add_background_task(do_slow_stuff2)
-        self.add_background_task(do_slow_stuff3)
+        # self.add_background_task(do_slow_stuff2)
+        # self.add_background_task(do_slow_stuff3)
         #th = threading.Thread(target=do_slow_stuff)
         #th.start()
 
