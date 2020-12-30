@@ -100,7 +100,7 @@ class Epub2Anki(toga.App):
         welcome_screen = FileChoosingScreen(state=state)
         welcome_screen.on_gui_constructed(self.load_anki_decks)
 
-        info_screen = InfoScreen(state=state)
+        info_screen = ProcessingScreen(state=state)
         info_screen.on_gui_constructed(self.start_bg_text_processing)
 
         vocab_screen = VocabScreen(state=state)
@@ -110,7 +110,7 @@ class Epub2Anki(toga.App):
         wizard = WizardBox([welcome_screen, info_screen, vocab_screen])
         wizard.style.update(flex=1)
 
-        self.main_window = toga.MainWindow(title=self.formal_name, size=(800, 600))
+        self.main_window = toga.MainWindow(title=self.formal_name, size=(30, 30))
         self.main_window.content = wizard
         self.main_window.content.style.update(padding=PADDING_UNIVERSAL)
         self.main_window.show()
@@ -214,6 +214,7 @@ class Epub2Anki(toga.App):
                     out["vocab_sentences"].append(highlighted_sentences)
                 return out
 
+            # todo maybe echo the size of the models etc
             steps = [
                 (step_load_nlp, "Loading the NLP Model etc."),
                 (step_nlp_epub, "NLP'ing the epub"),
@@ -386,7 +387,7 @@ class VocabScreen(ScreenWithState):
         LOG.debug(pprint.pformat(self._state))
 
 
-class InfoScreen(ScreenWithState):
+class ProcessingScreen(ScreenWithState):
     def construct_gui(self):
         lt_style = {"width": 50}
 
@@ -403,7 +404,7 @@ class InfoScreen(ScreenWithState):
         done_btn = toga.Button("Done", on_press=self.mark_finished)
 
         main_box = toga.Box(
-            children=[epub_lt, anki_lt, self.status_textarea, done_btn,],
+            children=[epub_lt, anki_lt, self.status_textarea, done_btn],
             style=Pack(direction=COLUMN, flex=1),
         )
         return main_box
@@ -411,6 +412,9 @@ class InfoScreen(ScreenWithState):
     def update_gui_contents(self):
         self.summary_epub_path.text = os.path.basename(self._state["epub_path"])
         self.summary_anki_deck.text = self._state["anki_selected_deck"]
+
+    def min_size(self):
+        return (800, 600)
 
     def step(self, step_name):
         return Step(step_name)
