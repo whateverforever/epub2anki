@@ -113,6 +113,7 @@ class Epub2Anki(toga.App):
             [welcome_screen, info_screen, vocab_screen, sentence_screen]
         )
         wizard_box.style.update(flex=1)
+        wizard_box.on_screen_change(self.update_progress_bar)
 
         self.progress_label = toga.Label("Step 1/X: ASDEFGH")
         self.progress_bar = toga.ProgressBar(
@@ -125,7 +126,7 @@ class Epub2Anki(toga.App):
         main_content = toga.Box(
             children=[
                 progress_box,
-                toga.Divider(style=Pack(padding=PADDING_UNIVERSAL / 2)),
+                toga.Divider(style=Pack(padding=(PADDING_UNIVERSAL / 2, 0))),
                 wizard_box,
             ],
             style=Pack(direction=COLUMN),
@@ -135,6 +136,13 @@ class Epub2Anki(toga.App):
         self.main_window.content = main_content
         self.main_window.content.style.update(padding=PADDING_UNIVERSAL)
         self.main_window.show()
+    
+    def update_progress_bar(self, wizard, screen):
+        title = screen.title()
+        if title:
+            self.progress_label.text = f"Step {wizard._current_screen+1}/{len(wizard._screens)}: {title}"
+        
+        self.progress_bar.value = (wizard._current_screen)/len(wizard._screens)
 
     def load_anki_decks(self, screen):
         LOG.debug("Loading Anki decks...")
@@ -447,6 +455,9 @@ class ProcessingScreen(ScreenWithState):
 
     def min_size(self):
         return (800, 600)
+    
+    def title(self):
+        return "what!"
 
     def step(self, step_name):
         return Step(step_name)
