@@ -8,6 +8,8 @@ import threading
 import time
 from io import StringIO
 
+from toga.widgets.progressbar import ProgressBar
+
 sys.path.append("/Users/max/Coding/python/ellana-vocab")
 
 import numpy as np
@@ -107,11 +109,30 @@ class Epub2Anki(toga.App):
 
         sentence_screen = SentenceScreen(state=state)
 
-        wizard = WizardBox([welcome_screen, info_screen, vocab_screen])
-        wizard.style.update(flex=1)
+        wizard_box = WizardBox(
+            [welcome_screen, info_screen, vocab_screen, sentence_screen]
+        )
+        wizard_box.style.update(flex=1)
+
+        self.progress_label = toga.Label("Step 1/X: ASDEFGH")
+        self.progress_bar = toga.ProgressBar(
+            style=Pack(flex=1, padding_left=PADDING_UNIVERSAL)
+        )
+        progress_box = toga.Box()
+        progress_box.add(self.progress_label)
+        progress_box.add(self.progress_bar)
+
+        main_content = toga.Box(
+            children=[
+                progress_box,
+                toga.Divider(style=Pack(padding=PADDING_UNIVERSAL / 2)),
+                wizard_box,
+            ],
+            style=Pack(direction=COLUMN),
+        )
 
         self.main_window = toga.MainWindow(title=self.formal_name, size=(30, 30))
-        self.main_window.content = wizard
+        self.main_window.content = main_content
         self.main_window.content.style.update(padding=PADDING_UNIVERSAL)
         self.main_window.show()
 
@@ -180,7 +201,7 @@ class Epub2Anki(toga.App):
 
                 sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
 
-                out = {"vocab_words":[],"vocab_sentences":[]}
+                out = {"vocab_words": [], "vocab_sentences": []}
                 for counted_lemma in lemmas_with_counts:
                     lem, count, idxs = counted_lemma
                     counts.append(count)
@@ -340,8 +361,14 @@ class VocabScreen(ScreenWithState):
             toga.Button("Take Word", style=Pack(flex=2), on_press=self.take_btn_clicked)
         )
 
+        finish_btn = toga.Button(
+            "Finish",
+            style=Pack(flex=1, padding_top=PADDING_UNIVERSAL),
+            on_press=self.mark_finished,
+        )
+
         return toga.Box(
-            children=[vocab_lt, self.examples_list, button_box],
+            children=[vocab_lt, self.examples_list, button_box, finish_btn],
             style=Pack(direction=COLUMN, flex=1),
         )
 
@@ -398,7 +425,12 @@ class ProcessingScreen(ScreenWithState):
         self.summary_anki_deck = anki_lt.text_label
 
         self.status_textarea = toga.MultilineTextInput(
-            style=Pack(flex=1, font_family="monospace")
+            style=Pack(
+                flex=1,
+                font_family="monospace",
+                padding_top=PADDING_UNIVERSAL,
+                padding_bottom=PADDING_UNIVERSAL,
+            )
         )
 
         done_btn = toga.Button("Done", on_press=self.mark_finished)
