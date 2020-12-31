@@ -3,7 +3,6 @@ import random
 import re
 import sys
 import time
-from io import StringIO
 
 sys.path.append("/Users/max/Coding/python/ellana-vocab")
 
@@ -21,62 +20,9 @@ from screen_processing import ProcessingScreen
 from screen_sentence import SentenceScreen
 from screen_vocab import VocabScreen
 
-
-class Logger:
-    def set_textarea(self, textarea):
-        self._textarea = textarea
-
-    def debug(self, message):
-        self._textarea.value += f"{message}\n"
-
-
-class Step:
-    """
-    Context manager to frame output while executing something. Use custom_print_fun
-    to log to UI elements.
-    """
-
-    def __init__(self, step_name, custom_print_fun=None, capture_stdouterr=True):
-        self.t_start = time.time()
-        self.step_name = step_name
-        self.custom_print_fun = custom_print_fun or print
-
-        self.stdout_buffer = None
-        if capture_stdouterr:
-            self.stdout_buffer = StringIO()
-
-    def __enter__(self):
-        self.custom_print_fun(f"Starting '{self.step_name}' [...")
-
-        if self.stdout_buffer:
-            sys.stdout = self.stdout_buffer
-            sys.stderr = self.stdout_buffer
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        if self.stdout_buffer:
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-            self.custom_print_fun(self.stdout_buffer.getvalue())
-
-        self.custom_print_fun(
-            f"...] Finished '{self.step_name}', took {time.time() - self.t_start:.1f}s\n"
-        )
-
-
-LOG = Logger()
 RE_MULTI_NEWLINES = re.compile(r"\n+")
-
-
 class Epub2Anki(toga.App):
     def startup(self):
-        log_textarea = toga.MultilineTextInput(readonly=True, style=Pack(flex=1))
-        self.log_window = toga.Window(title="Under the Hood")
-        self.log_window.content = toga.Box(children=[log_textarea])
-        self.log_window.show()
-
-        LOG.set_textarea(log_textarea)
-        LOG.debug("Logging window is up and running...")
-
         state = {
             "app": self,
             "epub_path": None,
@@ -143,13 +89,8 @@ class Epub2Anki(toga.App):
         self.progress_bar.value = (idx_screen) / nscreens
 
     def load_anki_decks(self, screen):
-        LOG.debug("Loading Anki decks...")
-
         anki_decks = backend.reader_anki.get_all_decks()
         screen._state["anki_all_decks"] = anki_decks
-
-        for deck in anki_decks:
-            LOG.debug("- Found {}".format(deck))
 
     def start_bg_text_processing(self, screen):
         async def do_slow_stuff(asdf):
