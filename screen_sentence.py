@@ -21,7 +21,7 @@ class SentenceScreen(ScreenWithState):
         )
         self.vocab_label = vocab_lt.text_label
 
-        self.examples_list = toga.Table(["Sentences"])
+        self.examples_list = toga.Table(["No.", "Sentences"])
         self.examples_list.style.update(
             flex=1, padding_top=PADDING_UNIVERSAL, padding_bottom=PADDING_UNIVERSAL
         )
@@ -94,7 +94,7 @@ class SentenceScreen(ScreenWithState):
             original_sentences = []
 
         self.vocab_label.text = vocab_word
-        self.examples_list.data = chosen_sentences
+        self.examples_list.data = [(f"[{i+1}]", sent) for i, sent in enumerate(chosen_sentences)]
         self.ensure_refresh()
 
     def finish_btn(self, sender):
