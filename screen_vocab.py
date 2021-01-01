@@ -13,7 +13,7 @@ class VocabScreen(ScreenWithState):
 
         self.examples_list = toga.Table(["Example Sentences"])
         self.examples_list.style.update(
-            flex=1, padding_top=PADDING_UNIVERSAL, padding_bottom=PADDING_UNIVERSAL
+            flex=1, padding=(PADDING_UNIVERSAL, 0)
         )
 
         button_box = toga.Box()
@@ -36,7 +36,7 @@ class VocabScreen(ScreenWithState):
         )
 
         finish_btn = toga.Button(
-            "Finish",
+            "Finish Word Selection",
             style=Pack(flex=1, padding_top=PADDING_UNIVERSAL),
             on_press=self.mark_finished,
         )
@@ -61,13 +61,14 @@ class VocabScreen(ScreenWithState):
             new_word = "[No more words]"
             sentences = []
 
-        self.vocab_label.text = new_word
+        frequency = 999
+
+        self.vocab_label.text = f"{new_word} (x{frequency}) ({vocab_idx+1} of {len(state['vocab_words'])})"
         self.examples_list.data = sentences
 
         self.ensure_refresh()
 
     def ignore_btn_clicked(self, sender):
-        # add word to ignore list
         vocab_idx = self._state["vocab_current"]
         word = self._state["vocab_words"][vocab_idx]
         self._state["vocab_ignored"].append(word)
@@ -80,8 +81,8 @@ class VocabScreen(ScreenWithState):
         self.update_gui_contents()
 
     def take_btn_clicked(self, sender):
-        # save somewhere
-        self._state["vocab_taken"].append(self._state["vocab_current"])
-        self._state["vocab_current"] += 1
+        vocab_idx = self._state["vocab_current"]
+        self._state["vocab_taken"].append(vocab_idx)
 
+        self._state["vocab_current"] += 1
         self.update_gui_contents()
