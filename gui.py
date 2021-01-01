@@ -89,8 +89,8 @@ class Epub2Anki(toga.App):
         anki_decks = backend.reader_anki.get_all_decks()
         screen._state["anki_all_decks"] = anki_decks
 
-    def start_bg_text_processing(self, screen):
-        async def do_slow_stuff(asdf):
+    def on_process_screen_ready(self, screen):
+        async def do_background_nlp_stuff(asdf):
             loop = asyncio.get_event_loop()
 
             def step_load_nlp(state):
@@ -204,8 +204,10 @@ class Epub2Anki(toga.App):
                         i, step_end_description, duration
                     )
                 )
+            
+            screen.enable_continue()
 
-        self.add_background_task(do_slow_stuff)
+        self.add_background_task(do_background_nlp_stuff)
 
 
 if __name__ == "__main__":
