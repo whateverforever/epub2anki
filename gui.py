@@ -29,22 +29,19 @@ class Epub2Anki(toga.App):
             "anki_all_decks": None,
             "anki_selected_deck": None,
             "vocab_current": 0,
-            "vocab_words": ["parler", "marcher", "chier", "mordiller"],  # TEMPORARY
-            "vocab_sentences": [
-                ["Je veux te parler", "Parle à ma main"],
-                ["Faisons march-arrière!"],
-                ["ça me fait chier"],
-                ["tu me mordilles l'oreille"],
-            ],
-            "vocab_ignored": ["parler"],
-            "vocab_taken": [1],  # indices of words worth considering
+            "vocab_words": [],
+            "vocab_sentences": [],
+            "vocab_ignored": [],
+            "vocab_taken": [],
+            "vocab_taken_current": 0,
+            "card_models": []
         }
 
         welcome_screen = FileChoosingScreen(state=state)
         welcome_screen.on_gui_constructed(self.load_anki_decks)
 
-        info_screen = ProcessingScreen(state=state)
-        info_screen.on_gui_constructed(self.start_bg_text_processing)
+        process_screen = ProcessingScreen(state=state)
+        process_screen.on_gui_constructed(self.on_process_screen_ready)
 
         vocab_screen = VocabScreen(state=state)
 
@@ -59,7 +56,7 @@ class Epub2Anki(toga.App):
         progress_box.add(self.progress_bar)
 
         wizard_box = WizardBox(
-            [welcome_screen, info_screen, vocab_screen, sentence_screen]
+            [welcome_screen, process_screen, vocab_screen, sentence_screen]
         )
         wizard_box.style.update(flex=1)
         wizard_box.on_screen_change(self.update_progress_bar)
