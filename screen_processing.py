@@ -28,10 +28,10 @@ class ProcessingScreen(ScreenWithState):
             )
         )
 
-        done_btn = toga.Button("Done", on_press=self.mark_finished)
+        self.done_btn = toga.Button("Done", on_press=self.mark_finished, enabled=False)
 
         main_box = toga.Box(
-            children=[epub_lt, anki_lt, self.status_textarea, done_btn],
+            children=[epub_lt, anki_lt, self.status_textarea, self.done_btn],
             style=Pack(direction=COLUMN, flex=1),
         )
         return main_box
@@ -48,3 +48,6 @@ class ProcessingScreen(ScreenWithState):
 
     def update_progress(self, message):
         self.status_textarea.value += f"{message}\n"
+    
+    def enable_continue(self):
+        self.done_btn.enabled = True
