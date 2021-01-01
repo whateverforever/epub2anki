@@ -13,7 +13,8 @@ from toga.style.pack import Pack
 from togawizard import WizardBox
 
 import backend
-from config import MAX_SENTENCES, PADDING_UNIVERSAL
+from config import MAX_WORDS_PER_SENT, PADDING_UNIVERSAL
+from filter_count_words import count_words_forall_sentences
 from html_cleaner import highlight_word
 from screen_filechoosing import FileChoosingScreen
 from screen_processing import ProcessingScreen
@@ -125,6 +126,12 @@ class Epub2Anki(toga.App):
                     state["doc_anki"]
                 )
 
+                sent_lens = count_words_forall_sentences(sents_epub)
+                for idx, _ in enumerate(sents_epub):
+                    if sent_lens[idx] > MAX_WORDS_PER_SENT:
+                        lemmas_epub[idx] = "<killed>"
+                        sents_epub[idx] = "<killed>"
+
                 import nimporter
                 from counter import countWithIndex, removeDuplicates
 
@@ -138,7 +145,7 @@ class Epub2Anki(toga.App):
 
                 lemmas_with_counts = [
                     (lem, count, idxs)
-                    for lem, count, idxs in countWithIndex(lemmas_epub)
+                    for lem, count, idxs in lemmas_with_counts
                     if count >= np.quantile(counts, 0.95)
                     and count <= np.quantile(counts, 0.99)
                 ]
@@ -153,21 +160,8 @@ class Epub2Anki(toga.App):
                     if lem in lemmas_anki:
                         continue
 
-                    random.seed(1234)
-                    try:
-                        lem_sentences = random.sample(
-                            ([sents_epub[i] for i in idxs]), MAX_SENTENCES
-                        )
-                    except ValueError:
-                        pass
-
-                    random.seed(1234)
-                    try:
-                        lem_verbatum_texts = random.sample(
-                            ([texts_epub[i] for i in idxs]), MAX_SENTENCES
-                        )
-                    except ValueError:
-                        pass
+                    lem_sentences = [sents_epub[i] for i in idxs]
+                    lem_verbatum_texts = [texts_epub[i] for i in idxs]
 
                     highlighted_sentences = [
                         highlight_word(
