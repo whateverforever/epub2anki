@@ -2,7 +2,8 @@ import re
 
 import toga
 from toga.constants import COLUMN
-from toga.style.pack import FONT_SIZE_CHOICES, Pack
+from toga.style.pack import Pack
+from toga_cocoa.libs import SEL
 
 import components as ui
 from config import NUM_SENTENCES, PADDING_UNIVERSAL
