@@ -22,6 +22,7 @@ from screen_filechoosing import FileChoosingScreen
 from screen_processing import ProcessingScreen
 from screen_sentence import SentenceScreen
 from screen_vocab import VocabScreen
+from screen_card import CardScreen
 
 RE_MULTI_NEWLINES = re.compile(r"\n+")
 
@@ -52,6 +53,9 @@ class Epub2Anki(toga.App):
 
         sentence_screen = SentenceScreen(state=state)
 
+        card_screen = CardScreen(state=state)
+        card_screen.on_gui_constructed(self.on_card_screen_ready)
+
         self.progress_label = toga.Label("Step X/X: XXXXX")
         self.progress_bar = toga.ProgressBar(
             style=Pack(flex=1, padding_left=PADDING_UNIVERSAL)
@@ -61,7 +65,7 @@ class Epub2Anki(toga.App):
         progress_box.add(self.progress_bar)
 
         wizard_box = WizardBox(
-            [welcome_screen, process_screen, vocab_screen, sentence_screen]
+            [welcome_screen, process_screen, vocab_screen, sentence_screen, card_screen]
         )
         wizard_box.style.update(flex=1)
         wizard_box.on_screen_change(self.update_progress_bar)
@@ -217,10 +221,6 @@ class Epub2Anki(toga.App):
                     )
                 )
 
-            # DEBUG
-            import pprint
-            print("state", pprint.pformat(screen._state))
-
             with open(DEBUG_STATE_DUMP, "wb+") as fh:
                 # DEBUG: To keep things picklable
                 del screen._state["doc_epub"]
@@ -235,6 +235,15 @@ class Epub2Anki(toga.App):
             screen.enable_continue()
 
         self.add_background_task(do_background_nlp_stuff)
+
+    def on_card_screen_ready(self, screen):
+        """
+        self._state["card_models"].append(
+            {"sentences": ["sent1", "sent2", "sent3"], "definition": "asdf"}
+        )
+        """
+        import pprint
+        pprint.pprint(screen._state["card_models"])
 
 
 if __name__ == "__main__":

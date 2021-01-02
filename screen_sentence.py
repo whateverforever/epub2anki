@@ -79,31 +79,40 @@ class SentenceScreen(ScreenWithState):
             vocab_idx_global = self._state["vocab_taken"][vocab_idx_taken]
             original_sentences = self._state["vocab_sentences"][vocab_idx_global]
 
-            vocab_word = self._state["vocab_words"][vocab_idx_global]
+            self.vocab_word = self._state["vocab_words"][vocab_idx_global]
 
-            if not hasattr(self, "sentence_idxs"):
+            if not hasattr(self, "sentence_idxs") or not self.sentence_idxs:
                 self.sentence_idxs = list(range(NUM_SENTENCES))
                 print("self.sentence_idxs", self.sentence_idxs)
-            
-            chosen_sentences = [original_sentences[i] for i in self.sentence_idxs]
+
+            self.chosen_sentences = [original_sentences[i] for i in self.sentence_idxs]
         except IndexError:
             # This catches too much. This also catches if no more
             # sentences are there for the current word
-            vocab_word = "[No more words]"
+            self.vocab_word = "[No more words]"
             original_sentences = []
 
-        self.vocab_label.text = vocab_word
-        self.examples_list.data = [(f"[{i+1}]", sent) for i, sent in enumerate(chosen_sentences)]
+        self.vocab_label.text = self.vocab_word
+        self.examples_list.data = [
+            (f"[{i+1}]", sent) for i, sent in enumerate(self.chosen_sentences)
+        ]
         self.ensure_refresh()
 
     def finish_btn(self, sender):
-        pass
+        self.mark_finished(sender)
 
     def save_btn_pressed(self, sender):
         self._state["card_models"].append(
-            {"sentences": ["sent1", "sent2", "sent3"], "definition": "asdf"}
+            {
+                "word": self.vocab_word,
+                "sentences": self.chosen_sentences,
+                "definition": str(self.definition_field.value),
+            }
         )
+
         self._state["vocab_taken_current"] += 1
+        self.sentence_idxs = None
+        self.definition_field.clear()
 
         self.update_gui_contents()
 
@@ -121,12 +130,9 @@ class SentenceScreen(ScreenWithState):
 
     def replace_sentence(self, sentence_idx):
         print(f"Someone wants to replace sentence {sentence_idx}")
-        
+
         max_sent_index = max(self.sentence_idxs)
         self.sentence_idxs[sentence_idx] = max_sent_index + 1
 
         print("self.sentence_idxs", self.sentence_idxs)
         self.update_gui_contents()
-    
-    def next_word(self):
-        self.sentence_idxs = None
