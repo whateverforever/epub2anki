@@ -35,7 +35,6 @@ class SentenceScreen(ScreenWithState):
             )
             for idx in range(NUM_SENTENCES)
         ]
-        self._state["app"].commands.add(*commands)
 
         numbered_replace_btns = [
             toga.Button(f"{idx+1}", on_press=self.replace_sent_btn)

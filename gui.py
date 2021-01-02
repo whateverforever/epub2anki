@@ -1,3 +1,5 @@
+import dill
+import os
 import asyncio
 import random
 import re
@@ -13,7 +15,7 @@ from toga.style.pack import Pack
 from togawizard import WizardBox
 
 import backend
-from config import MAX_WORDS_PER_SENT, PADDING_UNIVERSAL
+from config import MAX_WORDS_PER_SENT, PADDING_UNIVERSAL, DEBUG_STATE_DUMP
 from filter_count_words import count_words_forall_sentences
 from html_cleaner import highlight_word
 from screen_filechoosing import FileChoosingScreen
@@ -22,6 +24,8 @@ from screen_sentence import SentenceScreen
 from screen_vocab import VocabScreen
 
 RE_MULTI_NEWLINES = re.compile(r"\n+")
+
+
 class Epub2Anki(toga.App):
     def startup(self):
         state = {
@@ -35,7 +39,7 @@ class Epub2Anki(toga.App):
             "vocab_ignored": [],
             "vocab_taken": [],
             "vocab_taken_current": 0,
-            "card_models": []
+            "card_models": [],
         }
 
         welcome_screen = FileChoosingScreen(state=state)
@@ -93,6 +97,20 @@ class Epub2Anki(toga.App):
     def on_process_screen_ready(self, screen):
         async def do_background_nlp_stuff(asdf):
             loop = asyncio.get_event_loop()
+
+            # DEBUG
+            if os.path.isfile(DEBUG_STATE_DUMP):
+                with open(DEBUG_STATE_DUMP, "rb") as fh:
+                    disk_state = dill.load(fh)
+                    screen._state.update(disk_state)
+
+                screen.update_progress(
+                    "DEBUG: Loaded from {} instead of computing".format(
+                        DEBUG_STATE_DUMP
+                    )
+                )
+                screen.enable_continue()
+                return
 
             def step_load_nlp(state):
                 text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
@@ -198,7 +216,22 @@ class Epub2Anki(toga.App):
                         i, step_end_description, duration
                     )
                 )
-            
+
+            # DEBUG
+            import pprint
+            print("state", pprint.pformat(screen._state))
+
+            with open(DEBUG_STATE_DUMP, "wb+") as fh:
+                # DEBUG: To keep things picklable
+                del screen._state["doc_epub"]
+                del screen._state["doc_anki"]
+                del screen._state["nlp_module"]
+                del screen._state["nlp_model"]
+                del screen._state["app"]
+
+                disk_state = dill.dump(screen._state, fh)
+
+            screen.update_progress("DEBUG: Wrote state to {}".format(DEBUG_STATE_DUMP))
             screen.enable_continue()
 
         self.add_background_task(do_background_nlp_stuff)
