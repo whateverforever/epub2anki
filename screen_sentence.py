@@ -12,15 +12,14 @@ from screen_state import ScreenWithState
 
 class SentenceScreen(ScreenWithState):
     def construct_gui(self):
-        vocab_lt = ui.LabeledText("Vocab:", "<vocab_lt placeholder>",)
-        vocab_lt.style.update(
-            padding=(PADDING_UNIVERSAL * 5, 0),
-            background_color="#afa",
-            font_size=80,
-            flex=1,
+        self.vocab_label = toga.Label("<vocab_lt placeholder>")
+        self.vocab_label.style.update(
+            height=PADDING_UNIVERSAL*5,
             text_align="center",
+            font_weight="bold",
+            font_size=48,
+            background_color="#afa",
         )
-        self.vocab_label = vocab_lt.text_label
 
         self.examples_list = toga.Table(["No.", "Sentences"])
         self.examples_list.style.update(
@@ -51,7 +50,7 @@ class SentenceScreen(ScreenWithState):
 
         return toga.Box(
             children=[
-                vocab_lt,
+                self.vocab_label,
                 self.examples_list,
                 button_box,
                 self.definition_field,
@@ -83,7 +82,7 @@ class SentenceScreen(ScreenWithState):
             self.vocab_word = "[No more words]"
             original_sentences = []
 
-        self.vocab_label.text = self.vocab_word
+        self.vocab_label.text = f"'{self.vocab_word}'"
         self.examples_list.data = [
             (f"[{i+1}]", sent) for i, sent in enumerate(self.chosen_sentences)
         ]
