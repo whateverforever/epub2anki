@@ -130,6 +130,8 @@ class Epub2Anki(toga.App):
                     )
                 )
                 screen.enable_continue()
+                await asyncio.sleep(3)
+                screen.mark_finished(None)
                 return
 
             def step_load_nlp(state):
@@ -249,6 +251,9 @@ class Epub2Anki(toga.App):
 
             screen.update_progress("DEBUG: Wrote state to {}".format(DEBUG_STATE_DUMP))
             screen.enable_continue()
+            
+            await asyncio.sleep(5)
+            screen.mark_finished(None)
 
         self.add_background_task(do_background_nlp_stuff)
 
