@@ -27,16 +27,6 @@ class SentenceScreen(ScreenWithState):
             flex=1, padding_top=PADDING_UNIVERSAL, padding_bottom=PADDING_UNIVERSAL
         )
 
-        commands = [
-            toga.Command(
-                self.replace_sent_cmd,
-                label=f"Replace Sentence {idx+1}",
-                shortcut=toga.Key.MOD_1 + f"{idx+1}",
-                order=idx,
-            )
-            for idx in range(NUM_SENTENCES)
-        ]
-
         numbered_replace_btns = [
             toga.Button(f"{idx+1}", on_press=self.replace_sent_btn)
             for idx in range(NUM_SENTENCES)
@@ -120,12 +110,6 @@ class SentenceScreen(ScreenWithState):
         self.definition_field.clear()
 
         self.update_gui_contents()
-
-    def replace_sent_cmd(self, sender: toga.Command):
-        sentence_number = re.sub(r"<.+?>", "", sender.shortcut)
-        sentence_idx = int(sentence_number) - 1
-
-        self.replace_sentence(sentence_idx)
 
     def replace_sent_btn(self, sender: toga.Button):
         sentence_number = int(sender.label)
