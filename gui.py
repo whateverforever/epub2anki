@@ -208,12 +208,12 @@ class Epub2Anki(toga.App):
                 print("np.quantile(counts, 0.95)", np.quantile(counts, 0.95))
                 print("np.quantile(counts, 0.99)", np.quantile(counts, 0.99))
 
-                lemmas_with_counts = [
-                    (lem, count, idxs)
-                    for lem, count, idxs in lemmas_with_counts
-                    if count >= np.quantile(counts, 0.95)
-                    and count <= np.quantile(counts, 0.99)
-                ]
+                #lemmas_with_counts = [
+                #    (lem, count, idxs)
+                #    for lem, count, idxs in lemmas_with_counts
+                #    if count >= np.quantile(counts, 0.95)
+                #    and count <= np.quantile(counts, 0.99)
+                #]
 
                 sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
 
