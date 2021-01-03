@@ -64,7 +64,7 @@ class VocabScreen(ScreenWithState):
         self.vocab_label.text = (
             f"{new_word} (x{frequency}) ({vocab_idx+1} of {len(state['vocab_words'])})"
         )
-        self.examples_list.data = sentences
+        self.examples_list.data = sentences[:100]
 
         self.ensure_refresh()
 
