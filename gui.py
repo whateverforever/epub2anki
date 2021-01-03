@@ -51,7 +51,15 @@ class Epub2Anki(toga.App):
 
         vocab_screen = VocabScreen(state=state)
 
-        sentence_screen = SentenceScreen(state=state)
+        self.sentence_screen = SentenceScreen(state=state)
+        commands = [
+            toga.Command(
+                self.clipboard_paste_cmd,
+                label=f"Paste",
+                shortcut=toga.Key.MOD_1 + toga.Key.V,
+            )
+        ]
+        self.commands.add(*commands)
 
         card_screen = CardScreen(state=state)
         card_screen.on_gui_constructed(self.on_card_screen_ready)
@@ -65,7 +73,7 @@ class Epub2Anki(toga.App):
         progress_box.add(self.progress_bar)
 
         wizard_box = WizardBox(
-            [welcome_screen, process_screen, vocab_screen, sentence_screen, card_screen]
+            [welcome_screen, process_screen, vocab_screen, self.sentence_screen, card_screen]
         )
         wizard_box.style.update(flex=1)
         wizard_box.on_screen_change(self.update_progress_bar)
@@ -83,6 +91,14 @@ class Epub2Anki(toga.App):
         self.main_window.content = main_content
         self.main_window.content.style.update(padding=PADDING_UNIVERSAL)
         self.main_window.show()
+    
+    # HACK, since clipboard doesn't work on macOS by default for this toga version
+    # Doesn't respect cursor position
+    def clipboard_paste_cmd(self, cmd):
+        import pyperclip
+        contents = pyperclip.paste()
+
+        self.sentence_screen.definition_field.value += contents
 
     def update_progress_bar(self, wizard, screen):
         title = screen.title()
@@ -187,7 +203,7 @@ class Epub2Anki(toga.App):
 
                     highlighted_sentences = [
                         highlight_word(
-                            lem_verbatum_texts[isent], sent, highlight="**WORD**"
+                            lem_verbatum_texts[isent], sent, highlight="<u>WORD</u>"
                         )
                         for isent, sent in enumerate(lem_sentences)
                     ]
