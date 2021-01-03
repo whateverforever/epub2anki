@@ -101,6 +101,10 @@ class SentenceScreen(ScreenWithState):
 
     def finish_btn(self, sender):
         self.mark_finished(sender)
+    
+    def pressed_key(self, shortcut):
+        if shortcut == (toga.Key.MOD_1 + toga.Key.ENTER):
+            self.save_btn_pressed(None)
 
     def save_btn_pressed(self, sender):
         self._state["card_models"].append(

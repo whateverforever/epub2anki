@@ -57,6 +57,26 @@ class Epub2Anki(toga.App):
                 self.clipboard_paste_cmd,
                 label=f"Paste",
                 shortcut=toga.Key.MOD_1 + toga.Key.V,
+            ),
+            toga.Command(
+                self.interesting_key_pressed,
+                label="CMD Enter",
+                shortcut=toga.Key.MOD_1 + toga.Key.ENTER
+            ),
+            toga.Command(
+                self.interesting_key_pressed,
+                label="1",
+                shortcut=toga.Key._1
+            ),
+            toga.Command(
+                self.interesting_key_pressed,
+                label="2",
+                shortcut=toga.Key._2
+            ),
+            toga.Command(
+                self.interesting_key_pressed,
+                label="3",
+                shortcut=toga.Key._3
             )
         ]
         self.commands.add(*commands)
@@ -72,17 +92,17 @@ class Epub2Anki(toga.App):
         progress_box.add(self.progress_label)
         progress_box.add(self.progress_bar)
 
-        wizard_box = WizardBox(
+        self.wizard_box = WizardBox(
             [welcome_screen, process_screen, vocab_screen, self.sentence_screen, card_screen]
         )
-        wizard_box.style.update(flex=1)
-        wizard_box.on_screen_change(self.update_progress_bar)
+        self.wizard_box.style.update(flex=1)
+        self.wizard_box.on_screen_change(self.update_progress_bar)
 
         main_content = toga.Box(
             children=[
                 progress_box,
                 toga.Divider(style=Pack(padding=(PADDING_UNIVERSAL / 2, 0))),
-                wizard_box,
+                self.wizard_box,
             ],
             style=Pack(direction=COLUMN),
         )
@@ -99,6 +119,9 @@ class Epub2Anki(toga.App):
         contents = pyperclip.paste()
 
         self.sentence_screen.definition_field.value += contents
+    
+    def interesting_key_pressed(self, cmd:toga.Command):
+        self.wizard_box.current_screen.pressed_key(cmd.shortcut)
 
     def update_progress_bar(self, wizard, screen):
         title = screen.title()
@@ -182,6 +205,8 @@ class Epub2Anki(toga.App):
                 ]
 
                 counts = [count for lem, count, idxs in lemmas_with_counts]
+                print("np.quantile(counts, 0.95)", np.quantile(counts, 0.95))
+                print("np.quantile(counts, 0.99)", np.quantile(counts, 0.99))
 
                 lemmas_with_counts = [
                     (lem, count, idxs)
