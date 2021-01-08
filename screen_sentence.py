@@ -4,6 +4,7 @@ import toga
 from toga.constants import COLUMN
 from toga.style.pack import Pack
 from toga_cocoa.libs import SEL
+from travertino.constants import CENTER
 
 import components as ui
 from config import NUM_SENTENCES, PADDING_UNIVERSAL
@@ -12,14 +13,25 @@ from screen_state import ScreenWithState
 
 class SentenceScreen(ScreenWithState):
     def construct_gui(self):
-        self.vocab_label = toga.Label("<vocab_lt placeholder>")
-        self.vocab_label.style.update(
-            height=PADDING_UNIVERSAL*5,
-            text_align="center",
-            font_weight="bold",
-            font_size=48,
-            background_color="#afa",
+        self.vocab_label = toga.Label(
+            "<vocab_lt placeholder>",
+            style=Pack(
+                text_align="center",
+                font_weight="bold",
+                font_size=48,
+                padding_top=PADDING_UNIVERSAL,
+            ),
         )
+        self.progress_label = toga.Label(
+            "<progress label>",
+            style=Pack(text_align=CENTER, padding_bottom=PADDING_UNIVERSAL),
+        )
+
+        vocab_and_progress_box = toga.Box(
+            style=Pack(direction=COLUMN, background_color="#afa",)
+        )
+        vocab_and_progress_box.add(self.vocab_label)
+        vocab_and_progress_box.add(self.progress_label)
 
         self.examples_list = toga.Table(["No.", "Sentences"])
         self.examples_list.style.update(
@@ -50,7 +62,7 @@ class SentenceScreen(ScreenWithState):
 
         return toga.Box(
             children=[
-                self.vocab_label,
+                vocab_and_progress_box,
                 self.examples_list,
                 button_box,
                 self.definition_field,
@@ -73,7 +85,6 @@ class SentenceScreen(ScreenWithState):
 
             if not hasattr(self, "sentence_idxs") or not self.sentence_idxs:
                 self.sentence_idxs = list(range(NUM_SENTENCES))
-                print("self.sentence_idxs", self.sentence_idxs)
 
             self.chosen_sentences = [original_sentences[i] for i in self.sentence_idxs]
         except IndexError:
@@ -90,7 +101,7 @@ class SentenceScreen(ScreenWithState):
 
     def finish_btn(self, sender):
         self.mark_finished(sender)
-    
+
     def pressed_key(self, shortcut):
         if shortcut == (toga.Key.MOD_1 + toga.Key.ENTER):
             self.save_btn_pressed(None)
