@@ -4,7 +4,7 @@ import toga
 from toga.constants import COLUMN
 from toga.style.pack import Pack
 from toga_cocoa.libs import SEL
-from travertino.constants import CENTER
+from travertino.constants import CENTER, HIDDEN
 
 import components as ui
 from config import NUM_SENTENCES, PADDING_UNIVERSAL
@@ -90,10 +90,14 @@ class SentenceScreen(ScreenWithState):
         except IndexError:
             # This catches too much. This also catches if no more
             # sentences are there for the current word
+            vocab_idx_taken = -1
             self.vocab_word = "[No more words]"
-            original_sentences = []
+            self.chosen_sentences = []
+            self.progress_label.style.update(visibility=HIDDEN)
 
         self.vocab_label.text = f"'{self.vocab_word}'"
+        self.progress_label.text = f"{vocab_idx_taken+1} of {len(self._state['vocab_taken'])}"
+
         self.examples_list.data = [
             (f"[{i+1}]", sent) for i, sent in enumerate(self.chosen_sentences)
         ]
