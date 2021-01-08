@@ -25,7 +25,7 @@ from screen_vocab import VocabScreen
 from screen_card import CardScreen
 
 RE_MULTI_NEWLINES = re.compile(r"\n+")
-
+KILLED_SENTENCE = "<killed>"
 
 class Epub2Anki(toga.App):
     def startup(self):
@@ -192,8 +192,8 @@ class Epub2Anki(toga.App):
                 sent_lens = count_words_forall_sentences(sents_epub)
                 for idx, _ in enumerate(sents_epub):
                     if sent_lens[idx] > MAX_WORDS_PER_SENT:
-                        lemmas_epub[idx] = "<killed>"
-                        sents_epub[idx] = "<killed>"
+                        lemmas_epub[idx] = KILLED_SENTENCE
+                        sents_epub[idx] = KILLED_SENTENCE
 
                 import nimporter
                 from counter import countWithIndex, removeDuplicates
@@ -219,14 +219,16 @@ class Epub2Anki(toga.App):
 
                 out = {"vocab_words": [], "vocab_sentences": []}
                 for counted_lemma in lemmas_with_counts:
-                    lem, count, idxs = counted_lemma
-                    counts.append(count)
+                    lem, count, sentence_idxs = counted_lemma
 
-                    if lem in lemmas_anki:
+                    if lem == KILLED_SENTENCE:
                         continue
 
-                    lem_sentences = [sents_epub[i] for i in idxs]
-                    lem_verbatum_texts = [texts_epub[i] for i in idxs]
+                    if len(lem) < 3:
+                        continue
+
+                    lem_sentences = [sents_epub[i] for i in sentence_idxs]
+                    lem_verbatum_texts = [texts_epub[i] for i in sentence_idxs]
 
                     highlighted_sentences = [
                         highlight_word(
