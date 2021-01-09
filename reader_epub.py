@@ -13,7 +13,9 @@ def read_and_clean_epub(epub_path):
     for doc in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
         text_content_with_html = doc.get_body_content().decode()
         text_content_no_html = strip_tags(text_content_with_html)
-        text_content_clean = RE_MULTINEWLINE.sub("\n", text_content_no_html)
+        # The newline replacement seems super important for spaCy to correclty
+        # parse POS and so on. Especially with malformed epubs
+        text_content_clean = RE_MULTINEWLINE.sub(" ", text_content_no_html)
         text_content = RE_MULTISPACE.sub(" ", text_content_clean)
         text_out += text_content
 
