@@ -5,7 +5,7 @@ with open("french_stopwords.txt", "r") as fh:
     stopwords = fh.readlines()
     stopwords = [word.strip() for word in stopwords]
 
-model = spacy.load("fr_core_news_md")
+model = spacy.load("fr_core_news_lg")
 model.Defaults.stop_words |= set(stopwords)
 model.add_pipe(LanguageDetector(), name="language_detector", last=True)
 
@@ -22,11 +22,12 @@ def lemmatize_doc(partially_french_text):
     return model(pure_french_text)
 
 
-def get_lemmas_and_sentences(doc):
-    doc = [token for token in doc if not token.is_stop]
+def get_lemmas_and_sentences(doc_in):
+    # PROPN means a certain token represents a name of a person, company, whatever
+    doc = [token for token in doc_in if not token.is_stop and token.pos_ != "PROPN"]
 
-    texts = [token.text.strip() for token in doc if not token.is_stop]
-    lemmas = [token.lemma_.strip() for token in doc]
+    words_raw = [token.text.strip() for token in doc]
+    words_lemmed = [token.lemma_.strip() for token in doc]
     sentences = [token.sent.text.strip() for token in doc]
 
-    return texts, lemmas, sentences
+    return words_raw, words_lemmed, sentences
