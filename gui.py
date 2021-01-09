@@ -182,17 +182,17 @@ class Epub2Anki(toga.App):
 
             def step_counting(state):
                 nlp = state["nlp_module"]
-                texts_epub, lemmas_epub, sents_epub = nlp.get_lemmas_and_sentences(
+                words_raw_epub, words_lem_epub, sents_epub = nlp.get_lemmas_and_sentences(
                     state["doc_epub"]
                 )
-                texts_anki, lemmas_anki, sents_anki = nlp.get_lemmas_and_sentences(
+                words_raw_anki, words_lem_anki, sents_anki = nlp.get_lemmas_and_sentences(
                     state["doc_anki"]
                 )
 
                 sent_lens = count_words_forall_sentences(sents_epub)
                 for idx, _ in enumerate(sents_epub):
                     if sent_lens[idx] > MAX_WORDS_PER_SENT:
-                        lemmas_epub[idx] = KILLED_SENTENCE
+                        words_lem_epub[idx] = KILLED_SENTENCE
                         sents_epub[idx] = KILLED_SENTENCE
 
                 import nimporter
@@ -200,20 +200,11 @@ class Epub2Anki(toga.App):
 
                 lemmas_with_counts = [
                     (lem, count, idxs)
-                    for lem, count, idxs in countWithIndex(lemmas_epub)
-                    if lem not in lemmas_anki
+                    for lem, count, idxs in countWithIndex(words_lem_epub)
+                    if lem not in words_lem_anki
                 ]
 
                 counts = [count for lem, count, idxs in lemmas_with_counts]
-                print("np.quantile(counts, 0.95)", np.quantile(counts, 0.95))
-                print("np.quantile(counts, 0.99)", np.quantile(counts, 0.99))
-
-                #lemmas_with_counts = [
-                #    (lem, count, idxs)
-                #    for lem, count, idxs in lemmas_with_counts
-                #    if count >= np.quantile(counts, 0.95)
-                #    and count <= np.quantile(counts, 0.99)
-                #]
 
                 sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
 
@@ -228,7 +219,7 @@ class Epub2Anki(toga.App):
                         continue
 
                     lem_sentences = [sents_epub[i] for i in sentence_idxs]
-                    lem_verbatum_texts = [texts_epub[i] for i in sentence_idxs]
+                    lem_verbatum_texts = [words_raw_epub[i] for i in sentence_idxs]
 
                     highlighted_sentences = [
                         highlight_word(
