@@ -24,6 +24,7 @@ def lemmatize_doc(partially_french_text):
 
 def get_lemmas_and_sentences(doc_in):
     # PROPN means a certain token represents a name of a person, company, whatever
+    # see https://spacy.io/usage/linguistic-features
     doc = [token for token in doc_in if not token.is_stop and token.pos_ != "PROPN"]
 
     words_raw = [token.text.strip() for token in doc]

@@ -55,11 +55,11 @@ class VocabScreen(ScreenWithState):
         if vocab_idx < len(state["vocab_words"]):
             new_word = state["vocab_words"][vocab_idx]
             sentences = state["vocab_sentences"][vocab_idx]
+            frequency = state["vocab_frequencies"][vocab_idx]
         else:
             new_word = "[No more words]"
             sentences = []
-
-        frequency = 999
+            frequency = -1
 
         self.vocab_label.text = (
             f"{new_word} (x{frequency}) ({vocab_idx+1} of {len(state['vocab_words'])})"

@@ -37,7 +37,7 @@ class ProcessingScreen(ScreenWithState):
         return main_box
 
     def update_gui_contents(self):
-        self.summary_epub_path.text = os.path.basename(self._state["epub_path"])
+        self.summary_epub_path.text = ", ".join([os.path.basename(path) for path in self._state["epub_paths"]])
         self.summary_anki_deck.text = self._state["anki_selected_deck"]
 
     def min_size(self):

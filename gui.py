@@ -31,7 +31,7 @@ class Epub2Anki(toga.App):
     def startup(self):
         state = {
             "app": self,
-            "epub_path": None,
+            "epub_paths": None,
             "anki_all_decks": None,
             "anki_selected_deck": None,
             "vocab_current": 0,
@@ -158,7 +158,11 @@ class Epub2Anki(toga.App):
                 return
 
             def step_load_nlp(state):
-                text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
+                #text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
+                text_epub = ""
+                for path in state["epub_paths"]:
+                    text_epub += backend.reader_srt.get_clean_srt_text(path)
+
                 text_anki = backend.reader_anki.get_deck_string(
                     state["anki_selected_deck"]
                 )
@@ -204,11 +208,9 @@ class Epub2Anki(toga.App):
                     if lem not in words_lem_anki
                 ]
 
-                counts = [count for lem, count, idxs in lemmas_with_counts]
-
                 sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
 
-                out = {"vocab_words": [], "vocab_sentences": []}
+                out = {"vocab_words": [], "vocab_sentences": [], "vocab_frequencies": []}
                 for counted_lemma in lemmas_with_counts:
                     lem, count, sentence_idxs = counted_lemma
 
@@ -217,6 +219,9 @@ class Epub2Anki(toga.App):
 
                     if len(lem) < 3:
                         continue
+
+                    #if count < 5 or count > 50:
+                    #    continue
 
                     lem_sentences = [sents_epub[i] for i in sentence_idxs]
                     lem_verbatum_texts = [words_raw_epub[i] for i in sentence_idxs]
@@ -228,7 +233,14 @@ class Epub2Anki(toga.App):
                         for isent, sent in enumerate(lem_sentences)
                     ]
                     out["vocab_words"].append(lem)
+                    out["vocab_frequencies"].append(count)
                     out["vocab_sentences"].append(highlighted_sentences)
+
+                # TEMP
+                out["vocab_words"] = list(reversed(out["vocab_words"]))
+                out["vocab_frequencies"] = list(reversed(out["vocab_frequencies"]))
+                out["vocab_sentences"] = list(reversed(out["vocab_sentences"]))
+
                 return out
 
             # todo maybe echo the size of the models etc
