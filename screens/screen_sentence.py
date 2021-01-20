@@ -1,14 +1,14 @@
 import re
 
 import toga
+from config import NUM_SENTENCES, PADDING_UNIVERSAL
 from toga.constants import COLUMN
 from toga.style.pack import Pack
 from toga_cocoa.libs import SEL
 from travertino.constants import CENTER, HIDDEN
 
-
-from config import NUM_SENTENCES, PADDING_UNIVERSAL
 from .screen_state import ScreenWithState
+
 
 class SentenceScreen(ScreenWithState):
     def construct_gui(self):
@@ -95,7 +95,9 @@ class SentenceScreen(ScreenWithState):
             self.progress_label.style.update(visibility=HIDDEN)
 
         self.vocab_label.text = f"'{self.vocab_word}'"
-        self.progress_label.text = f"{vocab_idx_taken+1} of {len(self._state['vocab_taken'])}"
+        self.progress_label.text = (
+            f"{vocab_idx_taken+1} of {len(self._state['vocab_taken'])}"
+        )
 
         self.examples_list.data = [
             (f"[{i+1}]", sent) for i, sent in enumerate(self.chosen_sentences)

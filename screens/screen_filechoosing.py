@@ -15,9 +15,7 @@ class FileChoosingScreen(ScreenWithState):
             children=[epub_label, self.epub_file_btn], style=Pack(padding_bottom=5)
         )
 
-        anki_label = toga.Label(
-            "Compare to which Anki deck?", style=Pack(flex=1)
-        )
+        anki_label = toga.Label("Compare to which Anki deck?", style=Pack(flex=1))
         self.anki_choice = toga.Selection(style=Pack(width=180))
         anki_box = toga.Box(
             children=[anki_label, self.anki_choice], style=Pack(padding_bottom=5)
@@ -51,7 +49,12 @@ class FileChoosingScreen(ScreenWithState):
 
     def pressed_epub_btn(self, btn):
         app = self._parent_wizard.app
-        epub_paths = [str(path) for path in app.main_window.open_file_dialog("Choose epub", multiselect=True)]
+        epub_paths = [
+            str(path)
+            for path in app.main_window.open_file_dialog(
+                "Choose epub", multiselect=True
+            )
+        ]
 
         # if not epub_paths.endswith(".epub"):
         #     app.main_window.error_dialog(
@@ -61,4 +64,6 @@ class FileChoosingScreen(ScreenWithState):
         #     return
 
         self._state["epub_paths"] = epub_paths
-        self.epub_file_btn.label = ", ".join([os.path.basename(path) for path in epub_paths])
+        self.epub_file_btn.label = ", ".join(
+            [os.path.basename(path) for path in epub_paths]
+        )

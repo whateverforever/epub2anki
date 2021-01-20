@@ -1,6 +1,8 @@
 import os
+
 import genanki
 import toga
+
 from .screen_state import ScreenWithState
 
 

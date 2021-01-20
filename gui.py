@@ -1,9 +1,10 @@
-import dill
-import os
 import asyncio
+import os
 import re
 import sys
 import time
+
+import dill
 
 sys.path.append("/Users/max/Coding/python/ellana-vocab")
 
@@ -14,12 +15,10 @@ from toga.style.pack import Pack
 from togawizard import WizardBox
 
 import backend
-from config import MAX_WORDS_PER_SENT, PADDING_UNIVERSAL, DEBUG_STATE_DUMP
-
-from utils.filter_count_words import count_words_forall_sentences
-from utils import highlight_word
-
 import screens
+from config import DEBUG_STATE_DUMP, MAX_WORDS_PER_SENT, PADDING_UNIVERSAL
+from utils import highlight_word
+from utils.filter_count_words import count_words_forall_sentences
 
 RE_MULTI_NEWLINES = re.compile(r"\n+")
 KILLED_SENTENCE = "<killed>"

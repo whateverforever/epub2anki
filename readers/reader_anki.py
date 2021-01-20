@@ -4,14 +4,13 @@ from ankipandas import Collection
 
 from .html_cleaner import strip_tags
 
-SUPPORTED_EXTENSIONS = [
-    "<none>"
-]
+SUPPORTED_EXTENSIONS = ["<none>"]
 
 # done to satisfy interface, maybe not a good idea
 # to have the anki reader here amidst the others
 def load_text_from():
     pass
+
 
 def get_all_decks():
     col = Collection()
@@ -27,7 +26,8 @@ def get_all_decks():
     res = sorted(col.cards.cdeck.unique())
     del col
 
-    return res 
+    return res
+
 
 def get_deck_string(deck_name):
     """
@@ -58,6 +58,7 @@ def get_deck_string(deck_name):
 
     del col
     return anki_text
+
 
 if __name__ == "__main__":
     get_all_decks()

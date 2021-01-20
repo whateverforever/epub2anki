@@ -7,7 +7,9 @@ class LabeledText(toga.Box):
     def __init__(self, label, text, label_style=None, text_style=None, **kwargs):
         super().__init__(**kwargs)
 
-        self.label_label = toga.Label(label, style=Pack(font_weight=BOLD, text_align=RIGHT))
+        self.label_label = toga.Label(
+            label, style=Pack(font_weight=BOLD, text_align=RIGHT)
+        )
         self.text_label = toga.Label(text)
 
         if isinstance(label_style, dict):

@@ -1,11 +1,12 @@
 import re
+
 import ebooklib
 from ebooklib import epub
+
 from .html_cleaner import strip_tags
 
-SUPPORTED_EXTENSIONS = [
-    ".epub"
-]
+SUPPORTED_EXTENSIONS = [".epub"]
+
 
 def load_text_from(epub_path):
     book = epub.read_epub(epub_path)
