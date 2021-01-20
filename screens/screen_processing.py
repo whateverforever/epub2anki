@@ -1,22 +1,22 @@
 import os
 
 import toga
+from config import PADDING_UNIVERSAL
 from toga.constants import COLUMN
 from toga.style.pack import Pack
 
-import components as ui
-from config import PADDING_UNIVERSAL
-from screen_state import ScreenWithState
+from .screen_state import ScreenWithState
+from .ui import LabeledText
 
 
 class ProcessingScreen(ScreenWithState):
     def construct_gui(self):
         lt_style = {"width": 50}
 
-        epub_lt = ui.LabeledText("Epub:", "<placeholder>", label_style=lt_style)
+        epub_lt = LabeledText("Epub:", "<placeholder>", label_style=lt_style)
         self.summary_epub_path = epub_lt.text_label
 
-        anki_lt = ui.LabeledText("Anki:", "<placeholder>", label_style=lt_style)
+        anki_lt = LabeledText("Anki:", "<placeholder>", label_style=lt_style)
         self.summary_anki_deck = anki_lt.text_label
 
         self.status_textarea = toga.MultilineTextInput(

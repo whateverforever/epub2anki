@@ -1,7 +1,7 @@
 import os
 import genanki
 import toga
-from screen_state import ScreenWithState
+from .screen_state import ScreenWithState
 
 
 class CardScreen(ScreenWithState):

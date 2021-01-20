@@ -2,7 +2,7 @@ import sqlite3
 
 from ankipandas import Collection
 
-from html_cleaner import strip_tags
+from .html_cleaner import strip_tags
 
 def get_all_decks():
     col = Collection()

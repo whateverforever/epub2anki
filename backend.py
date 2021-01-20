@@ -1,6 +1,4 @@
-import reader_anki
-import reader_epub
-import reader_srt
+from readers import reader_anki, reader_epub, reader_srt
 
 def load_nlp_models():
     import nlp_french

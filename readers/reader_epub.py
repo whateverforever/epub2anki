@@ -1,7 +1,7 @@
 import re
 import ebooklib
 from ebooklib import epub
-from html_cleaner import strip_tags
+from .html_cleaner import strip_tags
 
 
 def read_and_clean_epub(epub_path):

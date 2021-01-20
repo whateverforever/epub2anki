@@ -6,10 +6,9 @@ from toga.style.pack import Pack
 from toga_cocoa.libs import SEL
 from travertino.constants import CENTER, HIDDEN
 
-import components as ui
-from config import NUM_SENTENCES, PADDING_UNIVERSAL
-from screen_state import ScreenWithState
 
+from config import NUM_SENTENCES, PADDING_UNIVERSAL
+from .screen_state import ScreenWithState
 
 class SentenceScreen(ScreenWithState):
     def construct_gui(self):

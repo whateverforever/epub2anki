@@ -4,7 +4,7 @@ import toga
 from toga.constants import COLUMN
 from toga.style.pack import Pack
 
-from screen_state import ScreenWithState
+from .screen_state import ScreenWithState
 
 
 class FileChoosingScreen(ScreenWithState):

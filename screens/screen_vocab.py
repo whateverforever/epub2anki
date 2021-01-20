@@ -1,14 +1,15 @@
 import toga
-import components as ui
-from screen_state import ScreenWithState
+from config import PADDING_UNIVERSAL
 from toga.constants import COLUMN
 from toga.style.pack import Pack
-from config import PADDING_UNIVERSAL
+
+from .screen_state import ScreenWithState
+from .ui import LabeledText
 
 
 class VocabScreen(ScreenWithState):
     def construct_gui(self):
-        vocab_lt = ui.LabeledText("Vocab:", "<vocab_lt placeholder>",)
+        vocab_lt = LabeledText("Vocab:", "<vocab_lt placeholder>",)
         self.vocab_label = vocab_lt.text_label
 
         self.examples_list = toga.Table(["Example Sentences"])

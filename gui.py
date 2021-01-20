@@ -1,7 +1,6 @@
 import dill
 import os
 import asyncio
-import random
 import re
 import sys
 import time
@@ -16,13 +15,11 @@ from togawizard import WizardBox
 
 import backend
 from config import MAX_WORDS_PER_SENT, PADDING_UNIVERSAL, DEBUG_STATE_DUMP
-from filter_count_words import count_words_forall_sentences
-from html_cleaner import highlight_word
-from screen_filechoosing import FileChoosingScreen
-from screen_processing import ProcessingScreen
-from screen_sentence import SentenceScreen
-from screen_vocab import VocabScreen
-from screen_card import CardScreen
+
+from utils.filter_count_words import count_words_forall_sentences
+from utils import highlight_word
+
+import screens
 
 RE_MULTI_NEWLINES = re.compile(r"\n+")
 KILLED_SENTENCE = "<killed>"
@@ -43,15 +40,15 @@ class Epub2Anki(toga.App):
             "card_models": [],
         }
 
-        welcome_screen = FileChoosingScreen(state=state)
+        welcome_screen = screens.FileChoosingScreen(state=state)
         welcome_screen.on_gui_constructed(self.load_anki_decks)
 
-        process_screen = ProcessingScreen(state=state)
+        process_screen = screens.ProcessingScreen(state=state)
         process_screen.on_gui_constructed(self.on_process_screen_ready)
 
-        vocab_screen = VocabScreen(state=state)
+        vocab_screen = screens.VocabScreen(state=state)
 
-        self.sentence_screen = SentenceScreen(state=state)
+        self.sentence_screen = screens.SentenceScreen(state=state)
         commands = [
             toga.Command(
                 self.clipboard_paste_cmd,
@@ -81,7 +78,7 @@ class Epub2Anki(toga.App):
         ]
         self.commands.add(*commands)
 
-        card_screen = CardScreen(state=state)
+        card_screen = screens.CardScreen(state=state)
         card_screen.on_gui_constructed(self.on_card_screen_ready)
 
         self.progress_label = toga.Label("Step X/X: XXXXX")
