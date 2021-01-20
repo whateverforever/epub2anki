@@ -1,6 +1,10 @@
 import re
 
-def get_clean_srt_text(path):
+SUPPORTED_EXTENSIONS = [
+    ".srt"
+]
+
+def load_text_from(path):
     srt = parse_srt_file(path)
     lines = [item["text"] for item in srt]
 

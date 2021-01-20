@@ -24,6 +24,7 @@ import screens
 RE_MULTI_NEWLINES = re.compile(r"\n+")
 KILLED_SENTENCE = "<killed>"
 
+
 class Epub2Anki(toga.App):
     def startup(self):
         state = {
@@ -58,23 +59,11 @@ class Epub2Anki(toga.App):
             toga.Command(
                 self.interesting_key_pressed,
                 label="CMD Enter",
-                shortcut=toga.Key.MOD_1 + toga.Key.ENTER
+                shortcut=toga.Key.MOD_1 + toga.Key.ENTER,
             ),
-            toga.Command(
-                self.interesting_key_pressed,
-                label="1",
-                shortcut=toga.Key._1
-            ),
-            toga.Command(
-                self.interesting_key_pressed,
-                label="2",
-                shortcut=toga.Key._2
-            ),
-            toga.Command(
-                self.interesting_key_pressed,
-                label="3",
-                shortcut=toga.Key._3
-            )
+            toga.Command(self.interesting_key_pressed, label="1", shortcut=toga.Key._1),
+            toga.Command(self.interesting_key_pressed, label="2", shortcut=toga.Key._2),
+            toga.Command(self.interesting_key_pressed, label="3", shortcut=toga.Key._3),
         ]
         self.commands.add(*commands)
 
@@ -90,7 +79,13 @@ class Epub2Anki(toga.App):
         progress_box.add(self.progress_bar)
 
         self.wizard_box = WizardBox(
-            [welcome_screen, process_screen, vocab_screen, self.sentence_screen, card_screen]
+            [
+                welcome_screen,
+                process_screen,
+                vocab_screen,
+                self.sentence_screen,
+                card_screen,
+            ]
         )
         self.wizard_box.style.update(flex=1)
         self.wizard_box.on_screen_change(self.update_progress_bar)
@@ -108,16 +103,17 @@ class Epub2Anki(toga.App):
         self.main_window.content = main_content
         self.main_window.content.style.update(padding=PADDING_UNIVERSAL)
         self.main_window.show()
-    
+
     # HACK, since clipboard doesn't work on macOS by default for this toga version
     # Doesn't respect cursor position
     def clipboard_paste_cmd(self, cmd):
         import pyperclip
+
         contents = pyperclip.paste()
 
         self.sentence_screen.definition_field.value += contents
-    
-    def interesting_key_pressed(self, cmd:toga.Command):
+
+    def interesting_key_pressed(self, cmd: toga.Command):
         self.wizard_box.current_screen.pressed_key(cmd.shortcut)
 
     def update_progress_bar(self, wizard, screen):
@@ -155,10 +151,19 @@ class Epub2Anki(toga.App):
                 return
 
             def step_load_nlp(state):
-                #text_epub = backend.reader_epub.read_and_clean_epub(state["epub_path"])
                 text_epub = ""
                 for path in state["epub_paths"]:
-                    text_epub += backend.reader_srt.get_clean_srt_text(path)
+                    _, ext = os.path.splitext(path)
+
+                    if ext not in backend.reader_for_extension:
+                        self.main_window.error_dialog(
+                            f"No plugin for .{ext} files",
+                            f"The file you're trying to open ({path}) is not supported, because there is no plugin available for it.",
+                        )
+                        continue
+
+                    file_reader = backend.reader_for_extension[ext]
+                    text_epub += file_reader.load_text_from(path)
 
                 text_anki = backend.reader_anki.get_deck_string(
                     state["anki_selected_deck"]
@@ -183,12 +188,16 @@ class Epub2Anki(toga.App):
 
             def step_counting(state):
                 nlp = state["nlp_module"]
-                words_raw_epub, words_lem_epub, sents_epub = nlp.get_lemmas_and_sentences(
-                    state["doc_epub"]
-                )
-                words_raw_anki, words_lem_anki, sents_anki = nlp.get_lemmas_and_sentences(
-                    state["doc_anki"]
-                )
+                (
+                    words_raw_epub,
+                    words_lem_epub,
+                    sents_epub,
+                ) = nlp.get_lemmas_and_sentences(state["doc_epub"])
+                (
+                    words_raw_anki,
+                    words_lem_anki,
+                    sents_anki,
+                ) = nlp.get_lemmas_and_sentences(state["doc_anki"])
 
                 sent_lens = count_words_forall_sentences(sents_epub)
                 for idx, _ in enumerate(sents_epub):
@@ -207,7 +216,11 @@ class Epub2Anki(toga.App):
 
                 sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
 
-                out = {"vocab_words": [], "vocab_sentences": [], "vocab_frequencies": []}
+                out = {
+                    "vocab_words": [],
+                    "vocab_sentences": [],
+                    "vocab_frequencies": [],
+                }
                 for counted_lemma in lemmas_with_counts:
                     lem, count, sentence_idxs = counted_lemma
 
@@ -217,7 +230,7 @@ class Epub2Anki(toga.App):
                     if len(lem) < 3:
                         continue
 
-                    #if count < 5 or count > 50:
+                    # if count < 5 or count > 50:
                     #    continue
 
                     lem_sentences = [sents_epub[i] for i in sentence_idxs]
@@ -278,7 +291,7 @@ class Epub2Anki(toga.App):
 
             screen.update_progress("DEBUG: Wrote state to {}".format(DEBUG_STATE_DUMP))
             screen.enable_continue()
-            
+
             await asyncio.sleep(5)
             screen.mark_finished(None)
 
@@ -291,6 +304,7 @@ class Epub2Anki(toga.App):
         )
         """
         import pprint
+
         pprint.pprint(screen._state["card_models"])
 
 

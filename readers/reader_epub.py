@@ -3,8 +3,11 @@ import ebooklib
 from ebooklib import epub
 from .html_cleaner import strip_tags
 
+SUPPORTED_EXTENSIONS = [
+    ".epub"
+]
 
-def read_and_clean_epub(epub_path):
+def load_text_from(epub_path):
     book = epub.read_epub(epub_path)
     RE_MULTINEWLINE = re.compile(r"(\s*?\n)+")
     RE_MULTISPACE = re.compile(r" +")

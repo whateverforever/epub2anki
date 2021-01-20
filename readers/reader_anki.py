@@ -4,6 +4,15 @@ from ankipandas import Collection
 
 from .html_cleaner import strip_tags
 
+SUPPORTED_EXTENSIONS = [
+    "<none>"
+]
+
+# done to satisfy interface, maybe not a good idea
+# to have the anki reader here amidst the others
+def load_text_from():
+    pass
+
 def get_all_decks():
     col = Collection()
 
