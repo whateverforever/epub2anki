@@ -1,7 +1,12 @@
+import os
+
 import spacy
 from spacy_langdetect import LanguageDetector
 
-with open("french_stopwords.txt", "r") as fh:
+basedir = os.path.dirname(__file__)
+stopwords_path = os.path.join(basedir, "french_stopwords.txt")
+
+with open(stopwords_path, "r") as fh:
     stopwords = fh.readlines()
     stopwords = [word.strip() for word in stopwords]
 
