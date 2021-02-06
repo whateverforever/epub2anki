@@ -5,9 +5,6 @@ import sys
 import time
 
 import dill
-
-sys.path.append("/Users/max/Coding/python/ellana-vocab")
-
 import numpy as np
 import toga
 from toga.constants import COLUMN
@@ -204,8 +201,10 @@ class Epub2Anki(toga.App):
                         words_lem_epub[idx] = KILLED_SENTENCE
                         sents_epub[idx] = KILLED_SENTENCE
 
+                # Needs to be imported in the thread it's used in, don't move to top
                 import nimporter
-                from counter import countWithIndex, removeDuplicates
+
+                from utils.counter import countWithIndex, removeDuplicates
 
                 lemmas_with_counts = [
                     (lem, count, idxs)
