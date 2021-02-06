@@ -26,6 +26,16 @@ class CardScreen(ScreenWithState):
         )
 
     def update_gui_contents(self):
+        generators = self._state["card_generators"]
+
+        gen_by_name = {}
+        for gen in generators:
+            gen_by_name[gen._NAME] = gen
+        
+        self.generator_selection.items = gen_by_name.keys()
+
+    def gen_btn_pressed(self):
+        generator = None
         epub_path = self._state["epub_paths"][0]
         deck_name = os.path.basename(epub_path)
         book_deck = genanki.Deck(2059400110, deck_name)
@@ -35,6 +45,3 @@ class CardScreen(ScreenWithState):
             book_deck.add_note(note)
 
         genanki.Package(book_deck).write_to_file("output.apkg")
-
-    def gen_btn_pressed(self):
-        pass

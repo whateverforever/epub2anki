@@ -17,6 +17,8 @@ from config import DEBUG_STATE_DUMP, MAX_WORDS_PER_SENT, PADDING_UNIVERSAL
 from utils import highlight_word
 from utils.filter_count_words import count_words_forall_sentences
 
+from cardgenerators import gen_first_sent
+
 RE_MULTI_NEWLINES = re.compile(r"\n+")
 KILLED_SENTENCE = "<killed>"
 
@@ -64,7 +66,7 @@ class Epub2Anki(toga.App):
         self.commands.add(*commands)
 
         card_screen = screens.CardScreen(state=state)
-        card_screen.on_gui_constructed(self.on_card_screen_ready)
+        card_screen.on_gui_constructed(self.on_card_screen_constructed)
 
         self.progress_label = toga.Label("Step X/X: XXXXX")
         self.progress_bar = toga.ProgressBar(
@@ -295,15 +297,8 @@ class Epub2Anki(toga.App):
 
         self.add_background_task(do_background_nlp_stuff)
 
-    def on_card_screen_ready(self, screen):
-        """
-        self._state["card_models"].append(
-            {"sentences": ["sent1", "sent2", "sent3"], "definition": "asdf"}
-        )
-        """
-        import pprint
-
-        pprint.pprint(screen._state["card_models"])
+    def on_card_screen_constructed(self, screen):
+        screen._state["card_generators"] = [gen_first_sent]
 
 
 if __name__ == "__main__":
