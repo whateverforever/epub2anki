@@ -36,7 +36,7 @@ class CardScreen(ScreenWithState):
             ],
         )
 
-        epub_path = self._state["epub_path"]
+        epub_path = self._state["epub_paths"][0]
         deck_name = os.path.basename(epub_path)
         book_deck = genanki.Deck(2059400110, deck_name)
 
