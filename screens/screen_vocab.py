@@ -16,22 +16,16 @@ class VocabScreen(ScreenWithState):
         self.examples_list.style.update(flex=1, padding=(PADDING_UNIVERSAL, 0))
 
         self.ignore_btn = toga.Button(
-            "Ignore Word",
+            "Ignore Word (1)",
             style=Pack(flex=1, padding_right=PADDING_UNIVERSAL),
             on_press=self.ignore_btn_clicked,
         )
-        self.skip_btn = toga.Button(
-            "Skip Word",
-            style=Pack(flex=1, padding_right=PADDING_UNIVERSAL),
-            on_press=self.skip_btn_clicked,
-        )
         self.take_btn = toga.Button(
-            "Take Word", style=Pack(flex=2), on_press=self.take_btn_clicked
+            "Take Word (2)", style=Pack(flex=2), on_press=self.take_btn_clicked
         )
 
         button_box = toga.Box()
         button_box.add(self.ignore_btn)
-        button_box.add(self.skip_btn)
         button_box.add(self.take_btn)
 
         self.finish_btn = toga.Button(
@@ -74,9 +68,6 @@ class VocabScreen(ScreenWithState):
             self.ignore_btn.focus()
             self.ignore_btn_clicked(None)
         elif shortcut == toga.Key._2:
-            self.skip_btn.focus()
-            self.skip_btn_clicked(None)
-        elif shortcut == toga.Key._3:
             self.take_btn.focus()
             self.take_btn_clicked(None)
         elif shortcut == toga.Key.MOD_1 + toga.Key.ENTER:
