@@ -83,7 +83,7 @@ class SentenceScreen(ScreenWithState):
             self.vocab_word = self._state["vocab_words"][vocab_idx_global]
 
             if not hasattr(self, "sentence_idxs") or not self.sentence_idxs:
-                self.sentence_idxs = list(range(NUM_SENTENCES))
+                self.sentence_idxs = list(range(min(NUM_SENTENCES, len(original_sentences))))
 
             self.chosen_sentences = [original_sentences[i] for i in self.sentence_idxs]
         except IndexError:
