@@ -10,9 +10,14 @@ from config import PADDING_UNIVERSAL
 
 class CardScreen(ScreenWithState):
     def construct_gui(self):
-        label = toga.Label("Which generator should make your cards?", style=Pack(flex=1))
+        label = toga.Label("Which generator should make your cards?")
+        label.style.update(flex=1)
+
         self.generator_selection = toga.Selection(on_select=self.gen_selected)
-        self.generator_description = toga.MultilineTextInput(readonly=True, style=Pack(padding_bottom=PADDING_UNIVERSAL))
+        
+        self.generator_description = toga.MultilineTextInput(readonly=True)
+        self.generator_description.style.update(padding_bottom=PADDING_UNIVERSAL)
+
         generate_btn = toga.Button("Generate Deck!", on_press=self.gen_btn_pressed)
 
         return toga.Box(
@@ -47,4 +52,6 @@ class CardScreen(ScreenWithState):
         for note in notes:
             book_deck.add_note(note)
 
-        genanki.Package(book_deck).write_to_file("output.apkg")
+        save_file_path = self._state["app"].main_window.save_file_dialog("Save Anki Deck", "epub2anki.apkg", file_types=["apkg"])
+
+        genanki.Package(book_deck).write_to_file(save_file_path)
