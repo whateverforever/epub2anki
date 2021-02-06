@@ -6,23 +6,22 @@ from toga.style import Pack
 from toga.constants import COLUMN
 
 from .screen_state import ScreenWithState
-
+from config import PADDING_UNIVERSAL
 
 class CardScreen(ScreenWithState):
     def construct_gui(self):
-        label = toga.Label("Which generator should make your cards?")
+        label = toga.Label("Which generator should make your cards?", style=Pack(flex=1))
         self.generator_selection = toga.Selection(on_select=self.gen_selected)
-        self.generator_description = toga.MultilineTextInput(readonly=True)
+        self.generator_description = toga.MultilineTextInput(readonly=True, style=Pack(padding_bottom=PADDING_UNIVERSAL))
         generate_btn = toga.Button("Generate Deck!", on_press=self.gen_btn_pressed)
 
         return toga.Box(
             children=[
-                label,
-                self.generator_selection,
+                toga.Box(children=[label, self.generator_selection], style=Pack(padding_bottom=PADDING_UNIVERSAL)),
                 self.generator_description,
                 generate_btn,
             ],
-            style=Pack(direction=COLUMN),
+            style=Pack(direction=COLUMN, flex=1),
         )
 
     def update_gui_contents(self):
@@ -31,7 +30,7 @@ class CardScreen(ScreenWithState):
         self.gen_by_name = {}
         for gen in generators:
             self.gen_by_name[gen._NAME] = gen
-        
+
         self.generator_selection.items = self.gen_by_name.keys()
         self.gen_selected(self.generator_selection)
 
