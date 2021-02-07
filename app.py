@@ -13,7 +13,7 @@ from togawizard import WizardBox
 
 import backend
 import screens
-from config import DEBUG_STATE_DUMP, MAX_WORDS_PER_SENT, PADDING_UNIVERSAL
+from config import DEBUG_STATE_DUMP, MAX_WORDS_PER_SENT, PADDING_UNIVERSAL, FILTER_PIPELINE
 from utils import highlight_word
 from utils.filter_count_words import count_words_forall_sentences
 
@@ -221,6 +221,18 @@ class Epub2Anki(toga.App):
                     "vocab_sentences": [],
                     "vocab_frequencies": [],
                 }
+
+                for filter_module in FILTER_PIPELINE:
+                    try:
+                        filtered_lemmas = filter_module.filter(lemmas_with_counts)
+                    except Exception as e:
+                        print("Filter {} failed with exception {}. Failing gracefully by ignoring filter".format(
+                            filter_module.__name__, e
+                        ))
+                        continue
+                    
+                    lemmas_with_counts = filtered_lemmas
+
                 for counted_lemma in lemmas_with_counts:
                     lem, count, sentence_idxs = counted_lemma
 

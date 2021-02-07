@@ -13,7 +13,7 @@ class CardScreen(ScreenWithState):
         label = toga.Label("Which generator should make your cards?")
         label.style.update(flex=1)
 
-        self.generator_selection = toga.Selection(on_select=self.gen_selected)
+        self.generator_selection = toga.Selection(items=["XXXXXXXXXXXXXXXXXXXX"], on_select=self.gen_selected)
         
         self.generator_description = toga.MultilineTextInput(readonly=True)
         self.generator_description.style.update(padding_bottom=PADDING_UNIVERSAL)

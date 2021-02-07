@@ -13,9 +13,14 @@ def generate_notes(card_models):
         fields=[{"name": "sentence"}, {"name": "definition"}],
         templates=[
             {
-                "name": "One-to-One Card",
+                "name": "epub2anki Single Sentence Gen",
                 "qfmt": "{{sentence}} {{tts fr_FR speed=1.25 :sentence}}",
                 "afmt": '{{FrontSide}}<hr id="answer">{{definition}} {{tts fr_FR speed=1.25 :definition}}',
+            },
+            {
+                "name": "epub2anki Single Sentence Gen Reverse",
+                "qfmt": "{{definition}} {{tts fr_FR speed=1.25 :definition}}",
+                "afmt": '{{FrontSide}}<hr id="answer">{{sentence}} {{tts fr_FR speed=1.25 :sentence}}',
             }
         ],
     )
