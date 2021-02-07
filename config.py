@@ -4,9 +4,7 @@ PADDING_UNIVERSAL = 15
 
 DEBUG_STATE_DUMP = "state.pickle"
 
-from filters import filter_low_freq, filter_short_lems
+from filters import filter_low_freq, filter_order_alpha, filter_short_lems
 
-FILTER_PIPELINE = [
-    filter_low_freq,
-    filter_short_lems
-]
+FILTER_PIPELINE = [filter_low_freq, filter_short_lems, filter_order_alpha]
+

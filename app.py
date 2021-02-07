@@ -256,11 +256,6 @@ class Epub2Anki(toga.App):
                     out["vocab_frequencies"].append(count)
                     out["vocab_sentences"].append(highlighted_sentences)
 
-                # TEMP
-                out["vocab_words"] = list(reversed(out["vocab_words"]))
-                out["vocab_frequencies"] = list(reversed(out["vocab_frequencies"]))
-                out["vocab_sentences"] = list(reversed(out["vocab_sentences"]))
-
                 return out
 
             # todo maybe echo the size of the models etc
