@@ -13,11 +13,11 @@ from togawizard import WizardBox
 
 import backend
 import screens
-from config import DEBUG_STATE_DUMP, MAX_WORDS_PER_SENT, PADDING_UNIVERSAL, FILTER_PIPELINE
+from cardgenerators import gen_first_sent
+from config import (DEBUG_STATE_DUMP, FILTER_PIPELINE, MAX_WORDS_PER_SENT,
+                    PADDING_UNIVERSAL)
 from utils import highlight_word
 from utils.filter_count_words import count_words_forall_sentences
-
-from cardgenerators import gen_first_sent
 
 RE_MULTI_NEWLINES = re.compile(r"\n+")
 KILLED_SENTENCE = "<killed>"
@@ -211,7 +211,7 @@ class Epub2Anki(toga.App):
                 lemmas_with_counts = [
                     (lem, count, idxs)
                     for lem, count, idxs in countWithIndex(words_lem_epub)
-                    if lem not in words_lem_anki
+                    if lem not in words_lem_anki and len != KILLED_SENTENCE
                 ]
 
                 sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
@@ -224,20 +224,24 @@ class Epub2Anki(toga.App):
 
                 for filter_module in FILTER_PIPELINE:
                     try:
-                        filtered_lemmas = filter_module.filter(lemmas_with_counts)
+                        filtered_lemmas = filter_module.filter(
+                            lemmas_with_counts, sents_epub, words_raw_epub
+                        )
                     except Exception as e:
-                        print("Filter {} failed with exception {}. Failing gracefully by ignoring filter".format(
-                            filter_module.__name__, e
-                        ))
+                        print(
+                            "Filter {} failed with exception {}. Failing gracefully by ignoring filter".format(
+                                filter_module.__name__, e
+                            )
+                        )
                         continue
-                    
+
                     lemmas_with_counts = filtered_lemmas
 
                 for counted_lemma in lemmas_with_counts:
                     lem, count, sentence_idxs = counted_lemma
 
-                    if lem == KILLED_SENTENCE:
-                        continue
+                    # if lem == KILLED_SENTENCE:
+                    #     continue
 
                     if len(lem) < 3:
                         continue
