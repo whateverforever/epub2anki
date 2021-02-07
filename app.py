@@ -240,14 +240,8 @@ class Epub2Anki(toga.App):
                 for counted_lemma in lemmas_with_counts:
                     lem, count, sentence_idxs = counted_lemma
 
-                    # if lem == KILLED_SENTENCE:
-                    #     continue
-
                     if len(lem) < 3:
                         continue
-
-                    # if count < 5 or count > 50:
-                    #    continue
 
                     lem_sentences = [sents_epub[i] for i in sentence_idxs]
                     lem_verbatum_texts = [words_raw_epub[i] for i in sentence_idxs]
