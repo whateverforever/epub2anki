@@ -211,7 +211,7 @@ class Epub2Anki(toga.App):
                 lemmas_with_counts = [
                     (lem, count, idxs)
                     for lem, count, idxs in countWithIndex(words_lem_epub)
-                    if lem not in words_lem_anki and len != KILLED_SENTENCE
+                    if lem not in words_lem_anki and lem != KILLED_SENTENCE
                 ]
 
                 sents_epub = [RE_MULTI_NEWLINES.sub(" ", senti) for senti in sents_epub]
