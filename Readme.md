@@ -1,5 +1,7 @@
 # epub2anki
 
+Stand-Alone GUI tool for semi-automatic sentence mining. Takes in a file that contains text in your target language, applies some filtering and then creates sentence cards. For supported input file types (not only epub is supported) see the `readers` folder. Feel free to add additional readers for some input you're interested in.
+
 ## Installing Requirements
 
 - `python -m spacy download fr_core_news_md`
